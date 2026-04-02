@@ -5,7 +5,7 @@ import Dashboard from "./pages/Dashboard";
 import Auth from "./pages/Auth";
 import Profile from "./pages/Profile";
 import Contact from "./pages/Contact";
-import Admin from "./pages/Admin"; // ✅ NEW
+import Admin from "./pages/Admin";
 
 function App() {
   const [user, setUser] = useState(null);
@@ -14,9 +14,14 @@ function App() {
   const [dark, setDark] = useState(true);
   const [menuOpen, setMenuOpen] = useState(false);
 
+  // 🔹 Load user + registrations
   useEffect(() => {
     const storedUser = JSON.parse(localStorage.getItem("currentUser"));
+    const storedRegistered =
+      JSON.parse(localStorage.getItem("registeredEvents")) || [];
+
     if (storedUser) setUser(storedUser);
+    setRegistered(storedRegistered);
   }, []);
 
   const handleLogin = (userData) => setUser(userData);
@@ -27,20 +32,35 @@ function App() {
     setRegistered([]);
   };
 
+  // ✅ REGISTER EVENT (UPDATED WITH STORAGE)
   const handleRegisterEvent = (event) => {
-    if (!registered.find(e => e.id === event.id)) {
-      setRegistered([...registered, event]);
+    const exists = registered.find(e => e.id === event.id);
+
+    if (!exists) {
+      const updated = [...registered, event];
+
+      setRegistered(updated);
+
+      // 🔥 SAVE FOR ADMIN ANALYTICS
+      localStorage.setItem(
+        "registeredEvents",
+        JSON.stringify(updated)
+      );
     }
   };
 
   if (!user) return <Auth onLogin={handleLogin} />;
 
   return (
-    <div className={dark ? "bg-gray-950 text-white min-h-screen" : "bg-white text-black min-h-screen"}>
-      
+    <div
+      className={
+        dark
+          ? "bg-gray-950 text-white min-h-screen"
+          : "bg-white text-black min-h-screen"
+      }
+    >
       {/* NAVBAR */}
       <div className="flex justify-between items-center p-4 bg-black text-white relative">
-        
         <h1 className="text-xl font-bold">UniSphere</h1>
 
         {/* LEFT NAV */}
@@ -48,7 +68,7 @@ function App() {
           <button onClick={() => setPage("home")}>Home</button>
           <button onClick={() => setPage("dashboard")}>Dashboard</button>
 
-          {/* ✅ ADMIN QUICK ACCESS (OPTIONAL) */}
+          {/* ADMIN QUICK ACCESS */}
           {user.role === "admin" && (
             <button onClick={() => setPage("admin")}>
               Admin
@@ -65,7 +85,6 @@ function App() {
             ☰
           </button>
 
-          {/* DROPDOWN */}
           {menuOpen && (
             <div className="absolute right-0 mt-2 w-52 bg-gray-800 rounded-xl shadow-lg p-3 flex flex-col gap-2 z-50">
               
@@ -93,7 +112,7 @@ function App() {
                 Contact
               </button>
 
-              {/* ✅ ADMIN PANEL IN MENU */}
+              {/* ADMIN PANEL */}
               {user.role === "admin" && (
                 <button
                   onClick={() => {
@@ -150,8 +169,10 @@ function App() {
 
           {page === "contact" && <Contact />}
 
-          {/* ✅ ADMIN PAGE */}
-          {page === "admin" && user.role === "admin" && <Admin />}
+          {/* ADMIN PAGE */}
+          {page === "admin" && user.role === "admin" && (
+            <Admin />
+          )}
         </motion.div>
       </AnimatePresence>
     </div>
