@@ -136,7 +136,7 @@ export default function LandingPage({ onRegister }) {
       <input
         type="text"
         placeholder="Search events..."
-        className="mb-6 px-4 py-3 rounded-xl w-full max-w-md"
+          className="mb-6 px-4 py-3 rounded-xl w-full max-w-md bg-gray-800 text-white placeholder-gray-400 outline-none focus:ring-2 focus:ring-purple-500"
         onChange={(e) => setSearch(e.target.value)}
       />
 
