@@ -10,6 +10,7 @@ function App() {
   const [page, setPage] = useState("home");
   const [registered, setRegistered] = useState([]);
   const [dark, setDark] = useState(true);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => {
     const storedUser = JSON.parse(localStorage.getItem("currentUser"));
@@ -36,29 +37,61 @@ function App() {
     <div className={dark ? "bg-gray-950 text-white" : "bg-white text-black"}>
       
       {/* NAVBAR */}
-      <div className="flex justify-between p-4 bg-black text-white">
+      <div className="flex justify-between items-center p-4 bg-black text-white relative">
+        
         <h1 className="text-xl font-bold">UniSphere</h1>
 
-        <div className="flex items-center gap-4">
-          <span>{user.name}</span>
-
+        {/* LEFT NAV */}
+        <div className="flex gap-4">
           <button onClick={() => setPage("home")}>Home</button>
           <button onClick={() => setPage("dashboard")}>Dashboard</button>
-          <button onClick={() => setPage("profile")}>Profile</button>
+        </div>
 
+        {/* HAMBURGER MENU */}
+        <div className="relative">
           <button
-            onClick={() => setDark(!dark)}
-            className="bg-purple-600 px-3 py-1 rounded"
+            onClick={() => setMenuOpen(!menuOpen)}
+            className="text-2xl"
           >
-            {dark ? "☀️" : "🌙"}
+            ☰
           </button>
 
-          <button
-            onClick={handleLogout}
-            className="bg-red-500 px-3 py-1 rounded"
-          >
-            Logout
-          </button>
+          {/* DROPDOWN */}
+          {menuOpen && (
+            <div className="absolute right-0 mt-2 w-48 bg-gray-800 rounded-xl shadow-lg p-3 flex flex-col gap-2 z-50">
+              
+              <span className="text-sm text-gray-300">
+                👤 {user.name}
+              </span>
+
+              <button
+                onClick={() => {
+                  setPage("profile");
+                  setMenuOpen(false);
+                }}
+                className="text-left hover:bg-gray-700 p-2 rounded"
+              >
+                Profile
+              </button>
+
+              <button
+                onClick={() => setDark(!dark)}
+                className="text-left hover:bg-gray-700 p-2 rounded"
+              >
+                {dark ? "Light Mode ☀️" : "Dark Mode 🌙"}
+              </button>
+
+              <button
+                onClick={() => {
+                  handleLogout();
+                  setMenuOpen(false);
+                }}
+                className="text-left hover:bg-red-500 p-2 rounded"
+              >
+                Logout
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
