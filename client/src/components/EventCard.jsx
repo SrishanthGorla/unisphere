@@ -10,17 +10,40 @@ export default function EventCard({ event, onRegister }) {
     setShowTicket(true);
   };
 
+  // 🟢 STATUS LOGIC
+  const getStatus = () => {
+    const today = new Date();
+    const eventDate = new Date(event.date);
+
+    if (eventDate.toDateString() === today.toDateString()) {
+      return { text: "Ongoing", color: "bg-green-500" };
+    } else if (eventDate > today) {
+      return { text: "Upcoming", color: "bg-blue-500" };
+    } else {
+      return { text: "Completed", color: "bg-gray-500" };
+    }
+  };
+
+  const status = getStatus();
+
   return (
     <>
       {/* CARD */}
-      <div className="bg-white/10 backdrop-blur-lg rounded-2xl shadow-lg border border-white/20 text-white overflow-hidden transform transition duration-300 hover:scale-105 hover:shadow-2xl">
+      <div className="bg-white/10 backdrop-blur-lg rounded-2xl shadow-lg border border-white/20 text-white overflow-hidden transform transition duration-300 hover:scale-105">
         
         {/* IMAGE */}
-        <img
-          src={event.image}
-          alt={event.title}
-          className="w-full h-40 object-cover transition duration-300 hover:scale-110"
-        />
+        <div className="relative">
+          <img
+            src={event.image}
+            alt={event.title}
+            className="w-full h-40 object-cover"
+          />
+
+          {/* STATUS BADGE */}
+          <span className={`absolute top-2 left-2 px-3 py-1 text-xs rounded-full ${status.color}`}>
+            {status.text}
+          </span>
+        </div>
 
         <div className="p-5">
           <div className="flex justify-between items-center">
@@ -66,24 +89,15 @@ export default function EventCard({ event, onRegister }) {
             className="bg-white text-black p-6 rounded-2xl w-80 text-center"
             onClick={(e) => e.stopPropagation()}
           >
-            <h2 className="text-2xl font-bold mb-2">
-              🎟 Event Ticket
-            </h2>
+            <h2 className="text-2xl font-bold mb-2">🎟 Event Ticket</h2>
 
             <p className="mb-2 font-semibold">{event.title}</p>
 
-            <p className="text-sm text-gray-600">
-              Entry Confirmed ✅
-            </p>
+            <p className="text-sm text-gray-600">Entry Confirmed ✅</p>
 
             <div className="mt-4 p-3 border-dashed border-2 rounded">
               ID: {Math.floor(Math.random() * 100000)}
             </div>
-
-            <p className="mt-3 text-sm">
-              📅 {event.date} <br />
-              ⏰ {event.time}
-            </p>
 
             <button
               onClick={() => setShowTicket(false)}
@@ -102,34 +116,20 @@ export default function EventCard({ event, onRegister }) {
           onClick={() => setShowDetails(false)}
         >
           <div
-            className="bg-gray-900 text-white p-6 rounded-2xl w-full max-w-md shadow-2xl"
+            className="bg-gray-900 text-white p-6 rounded-2xl w-full max-w-md"
             onClick={(e) => e.stopPropagation()}
           >
-            <img
-              src={event.image}
-              alt={event.title}
-              className="w-full h-48 object-cover rounded-xl mb-4"
-            />
+            <h2 className="text-2xl font-bold mb-3">{event.title}</h2>
 
-            <h2 className="text-2xl font-bold mb-2">
-              {event.title}
-            </h2>
-
-            <p className="text-gray-300 mb-4">
-              {event.description}
-            </p>
-
-            <div className="space-y-1 text-sm">
-              <p>📅 <b>Date:</b> {event.date}</p>
-              <p>⏰ <b>Time:</b> {event.time}</p>
-              <p>📍 <b>Venue:</b> {event.venue}</p>
-              <p>👨‍💼 <b>Coordinator:</b> {event.coordinator}</p>
-              <p>🎓 <b>Inspector:</b> {event.inspector}</p>
-            </div>
+            <p>📅 Date: {event.date}</p>
+            <p>⏰ Time: {event.time}</p>
+            <p>📍 Venue: {event.venue}</p>
+            <p>👨‍💼 Coordinator: {event.coordinator}</p>
+            <p>🎓 Inspector: {event.inspector}</p>
 
             <button
               onClick={() => setShowDetails(false)}
-              className="mt-5 w-full bg-red-500 py-2 rounded-xl"
+              className="mt-4 bg-red-500 px-4 py-2 rounded w-full"
             >
               Close
             </button>
