@@ -8,9 +8,10 @@ export default function Admin() {
   const [form, setForm] = useState({
     title: "",
     description: "",
-    category: "",
+    category: "Technical",
     date: "",
-    venue: ""
+    venue: "",
+    image: ""
   });
 
   useEffect(() => {
@@ -26,8 +27,21 @@ export default function Admin() {
     setEvents(updated);
   };
 
+  // 📸 IMAGE UPLOAD
+  const handleImage = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setForm({ ...form, image: reader.result });
+    };
+    reader.readAsDataURL(file);
+  };
+
+  // ➕ ADD / UPDATE
   const handleAddOrUpdate = () => {
-    if (!form.title || !form.description) {
+    if (!form.title || !form.description || !form.date) {
       alert("Fill all fields");
       return;
     }
@@ -49,9 +63,10 @@ export default function Admin() {
     setForm({
       title: "",
       description: "",
-      category: "",
+      category: "Technical",
       date: "",
-      venue: ""
+      venue: "",
+      image: ""
     });
   };
 
@@ -70,79 +85,118 @@ export default function Admin() {
       
       <h1 className="text-3xl mb-6 font-bold">Admin Dashboard 🛠️</h1>
 
-      {/* 📊 STATS */}
+      {/* 📊 SIMPLE CHART CARDS */}
       <div className="grid md:grid-cols-3 gap-4 mb-8">
-        <div className="bg-purple-600 p-4 rounded-xl">
-          <h2>Total Users</h2>
-          <p className="text-2xl font-bold">{users.length}</p>
+        <div className="bg-purple-600 p-4 rounded-xl text-center">
+          <p>Total Users</p>
+          <h2 className="text-3xl font-bold">{users.length}</h2>
         </div>
 
-        <div className="bg-blue-600 p-4 rounded-xl">
-          <h2>Total Events</h2>
-          <p className="text-2xl font-bold">{events.length}</p>
+        <div className="bg-blue-600 p-4 rounded-xl text-center">
+          <p>Total Events</p>
+          <h2 className="text-3xl font-bold">{events.length}</h2>
         </div>
 
-        <div className="bg-green-600 p-4 rounded-xl">
-          <h2>Registrations</h2>
-          <p className="text-2xl font-bold">
+        <div className="bg-green-600 p-4 rounded-xl text-center">
+          <p>Registrations</p>
+          <h2 className="text-3xl font-bold">
             {JSON.parse(localStorage.getItem("registeredEvents"))?.length || 0}
-          </p>
+          </h2>
         </div>
       </div>
 
-      {/* ✨ ADD / EDIT FORM */}
-      <div className="bg-white/10 backdrop-blur-lg border border-white/20 p-6 rounded-2xl mb-8 shadow-xl">
-        
-        <h2 className="text-xl mb-4 font-semibold">
-          {editingId ? "✏️ Edit Event" : "➕ Create New Event"}
-        </h2>
+      {/* ✨ FORM + PREVIEW */}
+      <div className="grid md:grid-cols-2 gap-6 mb-8">
 
-        <div className="grid md:grid-cols-2 gap-4">
-          
+        {/* FORM */}
+        <div className="bg-white/10 backdrop-blur-lg p-6 rounded-2xl border border-white/20">
+          <h2 className="mb-4 font-semibold">
+            {editingId ? "Edit Event ✏️" : "Create Event ➕"}
+          </h2>
+
           <input
-            placeholder="🎯 Event Title"
-            className="p-3 rounded-lg bg-gray-800 text-white outline-none focus:ring-2 focus:ring-purple-500"
+            placeholder="Event Title"
+            className="w-full mb-3 p-3 rounded bg-gray-800"
             value={form.title}
             onChange={(e) => setForm({ ...form, title: e.target.value })}
           />
 
-          <input
-            placeholder="📂 Category (Technical, Sports...)"
-            className="p-3 rounded-lg bg-gray-800 text-white outline-none focus:ring-2 focus:ring-purple-500"
-            value={form.category}
-            onChange={(e) => setForm({ ...form, category: e.target.value })}
+          <textarea
+            placeholder="Description"
+            className="w-full mb-3 p-3 rounded bg-gray-800"
+            value={form.description}
+            onChange={(e) => setForm({ ...form, description: e.target.value })}
           />
 
+          {/* 🔽 CATEGORY DROPDOWN */}
+          <select
+            className="w-full mb-3 p-3 rounded bg-gray-800"
+            value={form.category}
+            onChange={(e) => setForm({ ...form, category: e.target.value })}
+          >
+            <option>Technical</option>
+            <option>Workshop</option>
+            <option>Sports</option>
+            <option>Cultural</option>
+          </select>
+
           <input
-            placeholder="📅 Date (e.g. Feb 12 2026)"
-            className="p-3 rounded-lg bg-gray-800 text-white outline-none focus:ring-2 focus:ring-purple-500"
+            placeholder="Date (Feb 12 2026)"
+            className="w-full mb-3 p-3 rounded bg-gray-800"
             value={form.date}
             onChange={(e) => setForm({ ...form, date: e.target.value })}
           />
 
           <input
-            placeholder="📍 Venue"
-            className="p-3 rounded-lg bg-gray-800 text-white outline-none focus:ring-2 focus:ring-purple-500"
+            placeholder="Venue"
+            className="w-full mb-3 p-3 rounded bg-gray-800"
             value={form.venue}
             onChange={(e) => setForm({ ...form, venue: e.target.value })}
           />
+
+          {/* 📸 IMAGE UPLOAD */}
+          <input type="file" accept="image/*" onChange={handleImage} />
+
+          <button
+            onClick={handleAddOrUpdate}
+            className="mt-4 w-full bg-gradient-to-r from-purple-500 to-cyan-500 py-3 rounded-xl"
+          >
+            {editingId ? "Update Event" : "Add Event"}
+          </button>
         </div>
 
-        <textarea
-          placeholder="📝 Description"
-          className="w-full mt-4 p-3 rounded-lg bg-gray-800 text-white outline-none focus:ring-2 focus:ring-purple-500"
-          value={form.description}
-          onChange={(e) =>
-            setForm({ ...form, description: e.target.value })
-          }
-        />
+        {/* 🔥 LIVE PREVIEW */}
+        <div className="bg-white/10 p-6 rounded-2xl border border-white/20">
+          <h2 className="mb-4">Live Preview 👀</h2>
 
-        <button
-          onClick={handleAddOrUpdate}
-          className="mt-5 w-full bg-gradient-to-r from-purple-500 to-cyan-500 py-3 rounded-xl font-semibold hover:scale-105 transition"
-        >
-          {editingId ? "Update Event" : "Add Event"}
-        </button>
+          <div className="bg-gray-900 rounded-xl overflow-hidden">
+            {form.image && (
+              <img
+                src={form.image}
+                className="w-full h-40 object-cover"
+              />
+            )}
+
+            <div className="p-4">
+              <h2 className="text-xl">{form.title || "Event Title"}</h2>
+              <p className="text-gray-400 text-sm">
+                {form.description || "Description..."}
+              </p>
+
+              <p className="text-purple-400 text-sm mt-2">
+                {form.category}
+              </p>
+
+              <p className="text-sm mt-2">
+                📅 {form.date || "Date"}  
+              </p>
+
+              <p className="text-sm">
+                📍 {form.venue || "Venue"}
+              </p>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* 📋 EVENT LIST */}
@@ -150,10 +204,10 @@ export default function Admin() {
         {events.map(event => (
           <div
             key={event.id}
-            className="bg-white/10 p-4 rounded-xl flex justify-between items-center border border-white/20"
+            className="bg-white/10 p-4 rounded-xl flex justify-between"
           >
             <div>
-              <h2 className="font-bold">{event.title}</h2>
+              <h2>{event.title}</h2>
               <p className="text-sm text-gray-400">{event.date}</p>
             </div>
 
