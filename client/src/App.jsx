@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import LandingPage from "./pages/LandingPage";
 import Dashboard from "./pages/Dashboard";
 import Auth from "./pages/Auth";
+import Profile from "./pages/Profile";
 
 function App() {
   const [user, setUser] = useState(null);
@@ -43,8 +44,8 @@ function App() {
 
           <button onClick={() => setPage("home")}>Home</button>
           <button onClick={() => setPage("dashboard")}>Dashboard</button>
+          <button onClick={() => setPage("profile")}>Profile</button>
 
-          {/* THEME TOGGLE */}
           <button
             onClick={() => setDark(!dark)}
             className="bg-purple-600 px-3 py-1 rounded"
@@ -61,7 +62,7 @@ function App() {
         </div>
       </div>
 
-      {/* PAGE TRANSITION */}
+      {/* PAGE TRANSITIONS */}
       <AnimatePresence mode="wait">
         <motion.div
           key={page}
@@ -70,10 +71,14 @@ function App() {
           exit={{ opacity: 0, x: -50 }}
           transition={{ duration: 0.3 }}
         >
-          {page === "home" ? (
+          {page === "home" && (
             <LandingPage onRegister={handleRegisterEvent} />
-          ) : (
+          )}
+          {page === "dashboard" && (
             <Dashboard registered={registered} />
+          )}
+          {page === "profile" && (
+            <Profile user={user} setUser={setUser} />
           )}
         </motion.div>
       </AnimatePresence>
