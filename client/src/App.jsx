@@ -14,17 +14,27 @@ function App() {
   const [dark, setDark] = useState(true);
   const [menuOpen, setMenuOpen] = useState(false);
 
-  // 🔹 Load user + registrations
+  // ✅ LOAD USER + USER-SPECIFIC EVENTS
   useEffect(() => {
     const storedUser = JSON.parse(localStorage.getItem("currentUser"));
-    const storedRegistered =
-      JSON.parse(localStorage.getItem("registeredEvents")) || [];
+    const allRegistrations =
+      JSON.parse(localStorage.getItem("userRegistrations")) || {};
 
-    if (storedUser) setUser(storedUser);
-    setRegistered(storedRegistered);
+    if (storedUser) {
+      setUser(storedUser);
+      setRegistered(allRegistrations[storedUser.email] || []);
+    }
   }, []);
 
-  const handleLogin = (userData) => setUser(userData);
+  const handleLogin = (userData) => {
+    setUser(userData);
+
+    // Load that user's events immediately after login
+    const allRegistrations =
+      JSON.parse(localStorage.getItem("userRegistrations")) || {};
+
+    setRegistered(allRegistrations[userData.email] || []);
+  };
 
   const handleLogout = () => {
     localStorage.removeItem("currentUser");
@@ -32,20 +42,28 @@ function App() {
     setRegistered([]);
   };
 
-  // ✅ REGISTER EVENT (UPDATED WITH STORAGE)
+  // ✅ USER-SPECIFIC EVENT STORAGE (FIXED)
   const handleRegisterEvent = (event) => {
-    const exists = registered.find(e => e.id === event.id);
+    const allRegistrations =
+      JSON.parse(localStorage.getItem("userRegistrations")) || {};
+
+    const userEmail = user.email;
+
+    const userEvents = allRegistrations[userEmail] || [];
+
+    const exists = userEvents.find(e => e.id === event.id);
 
     if (!exists) {
-      const updated = [...registered, event];
+      const updatedUserEvents = [...userEvents, event];
 
-      setRegistered(updated);
+      allRegistrations[userEmail] = updatedUserEvents;
 
-      // 🔥 SAVE FOR ADMIN ANALYTICS
       localStorage.setItem(
-        "registeredEvents",
-        JSON.stringify(updated)
+        "userRegistrations",
+        JSON.stringify(allRegistrations)
       );
+
+      setRegistered(updatedUserEvents);
     }
   };
 
@@ -68,7 +86,6 @@ function App() {
           <button onClick={() => setPage("home")}>Home</button>
           <button onClick={() => setPage("dashboard")}>Dashboard</button>
 
-          {/* ADMIN QUICK ACCESS */}
           {user.role === "admin" && (
             <button onClick={() => setPage("admin")}>
               Admin
@@ -112,7 +129,6 @@ function App() {
                 Contact
               </button>
 
-              {/* ADMIN PANEL */}
               {user.role === "admin" && (
                 <button
                   onClick={() => {
@@ -169,7 +185,6 @@ function App() {
 
           {page === "contact" && <Contact />}
 
-          {/* ADMIN PAGE */}
           {page === "admin" && user.role === "admin" && (
             <Admin />
           )}
