@@ -4,6 +4,7 @@ export default function Admin() {
   const [events, setEvents] = useState([]);
   const [users, setUsers] = useState([]);
   const [editingId, setEditingId] = useState(null);
+  const [showUploadMenu, setShowUploadMenu] = useState(false); // ✅ NEW
 
   const [form, setForm] = useState({
     title: "",
@@ -85,7 +86,7 @@ export default function Admin() {
       
       <h1 className="text-3xl mb-6 font-bold">Admin Dashboard 🛠️</h1>
 
-      {/* 📊 SIMPLE CHART CARDS */}
+      {/* 📊 STATS */}
       <div className="grid md:grid-cols-3 gap-4 mb-8">
         <div className="bg-purple-600 p-4 rounded-xl text-center">
           <p>Total Users</p>
@@ -105,7 +106,7 @@ export default function Admin() {
         </div>
       </div>
 
-      {/* ✨ FORM + PREVIEW */}
+      {/* FORM + PREVIEW */}
       <div className="grid md:grid-cols-2 gap-6 mb-8">
 
         {/* FORM */}
@@ -128,7 +129,7 @@ export default function Admin() {
             onChange={(e) => setForm({ ...form, description: e.target.value })}
           />
 
-          {/* 🔽 CATEGORY DROPDOWN */}
+          {/* CATEGORY */}
           <select
             className="w-full mb-3 p-3 rounded bg-gray-800"
             value={form.category}
@@ -141,7 +142,7 @@ export default function Admin() {
           </select>
 
           <input
-            placeholder="Date (Feb 12 2026)"
+            placeholder="Date"
             className="w-full mb-3 p-3 rounded bg-gray-800"
             value={form.date}
             onChange={(e) => setForm({ ...form, date: e.target.value })}
@@ -154,8 +155,43 @@ export default function Admin() {
             onChange={(e) => setForm({ ...form, venue: e.target.value })}
           />
 
-          {/* 📸 IMAGE UPLOAD */}
-          <input type="file" accept="image/*" onChange={handleImage} />
+          {/* 📎 WHATSAPP STYLE UPLOAD */}
+          <div className="relative mt-3">
+            <button
+              onClick={() => setShowUploadMenu(!showUploadMenu)}
+              className="bg-gray-800 px-4 py-2 rounded-xl hover:bg-gray-700"
+            >
+              📎 Attach
+            </button>
+
+            {showUploadMenu && (
+              <div className="absolute mt-2 bg-gray-900 p-3 rounded-xl shadow-lg flex flex-col gap-2 z-50">
+                
+                <label className="cursor-pointer hover:bg-gray-700 p-2 rounded">
+                  📸 Upload Image
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(e) => {
+                      handleImage(e);
+                      setShowUploadMenu(false);
+                    }}
+                  />
+                </label>
+
+                <label className="cursor-pointer hover:bg-gray-700 p-2 rounded">
+                  📄 Upload File
+                  <input
+                    type="file"
+                    className="hidden"
+                    onChange={() => alert("File upload demo")}
+                  />
+                </label>
+
+              </div>
+            )}
+          </div>
 
           <button
             onClick={handleAddOrUpdate}
@@ -165,20 +201,17 @@ export default function Admin() {
           </button>
         </div>
 
-        {/* 🔥 LIVE PREVIEW */}
+        {/* LIVE PREVIEW */}
         <div className="bg-white/10 p-6 rounded-2xl border border-white/20">
           <h2 className="mb-4">Live Preview 👀</h2>
 
           <div className="bg-gray-900 rounded-xl overflow-hidden">
             {form.image && (
-              <img
-                src={form.image}
-                className="w-full h-40 object-cover"
-              />
+              <img src={form.image} className="w-full h-40 object-cover" />
             )}
 
             <div className="p-4">
-              <h2 className="text-xl">{form.title || "Event Title"}</h2>
+              <h2>{form.title || "Event Title"}</h2>
               <p className="text-gray-400 text-sm">
                 {form.description || "Description..."}
               </p>
@@ -187,19 +220,14 @@ export default function Admin() {
                 {form.category}
               </p>
 
-              <p className="text-sm mt-2">
-                📅 {form.date || "Date"}  
-              </p>
-
-              <p className="text-sm">
-                📍 {form.venue || "Venue"}
-              </p>
+              <p className="text-sm mt-2">📅 {form.date || "Date"}</p>
+              <p className="text-sm">📍 {form.venue || "Venue"}</p>
             </div>
           </div>
         </div>
       </div>
 
-      {/* 📋 EVENT LIST */}
+      {/* EVENT LIST */}
       <div className="space-y-4">
         {events.map(event => (
           <div
