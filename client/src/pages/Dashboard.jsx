@@ -21,10 +21,12 @@ export default function Dashboard({ registered }) {
                 {event.description}
               </p>
 
-              <div className="mt-3 text-sm text-gray-400">
-                <p><b>Name:</b> {event.user.name}</p>
-                <p><b>Email:</b> {event.user.email}</p>
-                <p><b>Phone:</b> {event.user.phone}</p>
+              {/* EVENT DETAILS */}
+              <div className="mt-3 text-sm text-gray-400 space-y-1">
+                <p>📅 <b>Date:</b> {event.date}</p>
+                <p>⏰ <b>Time:</b> {event.time}</p>
+                <p>📍 <b>Venue:</b> {event.venue}</p>
+                <p>👨‍💼 <b>Coordinator:</b> {event.coordinator}</p>
               </div>
             </div>
           ))}
