@@ -1,12 +1,14 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import EventCard from "../components/EventCard";
 
 export default function LandingPage({ onRegister }) {
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("All");
-  const [sort, setSort] = useState("default"); // ✅ NEW
+  const [sort, setSort] = useState("default");
+  const [events, setEvents] = useState([]); // ✅ NOW FROM STORAGE
 
-  const events = [
+  // ✅ DEFAULT EVENTS (ONLY FIRST TIME)
+  const defaultEvents = [
     {
       id: 1,
       title: "Hackathon 2026",
@@ -117,6 +119,18 @@ export default function LandingPage({ onRegister }) {
     }
   ];
 
+  // ✅ LOAD EVENTS FROM LOCALSTORAGE
+  useEffect(() => {
+    const stored = JSON.parse(localStorage.getItem("events"));
+
+    if (stored && stored.length > 0) {
+      setEvents(stored);
+    } else {
+      localStorage.setItem("events", JSON.stringify(defaultEvents));
+      setEvents(defaultEvents);
+    }
+  }, []);
+
   const categories = ["All", "Technical", "Workshop", "Sports", "Cultural"];
 
   // FILTER
@@ -128,7 +142,7 @@ export default function LandingPage({ onRegister }) {
       category === "All" ? true : event.category === category
     );
 
-  // 🔥 SORT LOGIC
+  // SORT
   if (sort === "name") {
     filteredEvents.sort((a, b) => a.title.localeCompare(b.title));
   }
@@ -179,7 +193,7 @@ export default function LandingPage({ onRegister }) {
         </select>
       </div>
 
-      {/* CATEGORY FILTER */}
+      {/* CATEGORY */}
       <div className="flex flex-wrap gap-3 mb-8">
         {categories.map((cat) => (
           <button
@@ -196,7 +210,7 @@ export default function LandingPage({ onRegister }) {
         ))}
       </div>
 
-      {/* EVENTS GRID */}
+      {/* EVENTS */}
       <div className="grid md:grid-cols-3 gap-8">
         {filteredEvents.map(event => (
           <EventCard
