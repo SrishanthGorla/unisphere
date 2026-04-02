@@ -5,6 +5,7 @@ import Dashboard from "./pages/Dashboard";
 import Auth from "./pages/Auth";
 import Profile from "./pages/Profile";
 import Contact from "./pages/Contact";
+import Admin from "./pages/Admin"; // ✅ NEW
 
 function App() {
   const [user, setUser] = useState(null);
@@ -46,6 +47,13 @@ function App() {
         <div className="flex gap-4">
           <button onClick={() => setPage("home")}>Home</button>
           <button onClick={() => setPage("dashboard")}>Dashboard</button>
+
+          {/* ✅ ADMIN QUICK ACCESS (OPTIONAL) */}
+          {user.role === "admin" && (
+            <button onClick={() => setPage("admin")}>
+              Admin
+            </button>
+          )}
         </div>
 
         {/* HAMBURGER MENU */}
@@ -59,7 +67,7 @@ function App() {
 
           {/* DROPDOWN */}
           {menuOpen && (
-            <div className="absolute right-0 mt-2 w-48 bg-gray-800 rounded-xl shadow-lg p-3 flex flex-col gap-2 z-50">
+            <div className="absolute right-0 mt-2 w-52 bg-gray-800 rounded-xl shadow-lg p-3 flex flex-col gap-2 z-50">
               
               <span className="text-sm text-gray-300">
                 👤 {user.name}
@@ -75,7 +83,6 @@ function App() {
                 Profile
               </button>
 
-              {/* ✅ NEW CONTACT BUTTON */}
               <button
                 onClick={() => {
                   setPage("contact");
@@ -85,6 +92,19 @@ function App() {
               >
                 Contact
               </button>
+
+              {/* ✅ ADMIN PANEL IN MENU */}
+              {user.role === "admin" && (
+                <button
+                  onClick={() => {
+                    setPage("admin");
+                    setMenuOpen(false);
+                  }}
+                  className="text-left hover:bg-blue-600 p-2 rounded"
+                >
+                  Admin Panel
+                </button>
+              )}
 
               <button
                 onClick={() => setDark(!dark)}
@@ -128,8 +148,10 @@ function App() {
             <Profile user={user} setUser={setUser} />
           )}
 
-          {/* ✅ NEW CONTACT PAGE */}
           {page === "contact" && <Contact />}
+
+          {/* ✅ ADMIN PAGE */}
+          {page === "admin" && user.role === "admin" && <Admin />}
         </motion.div>
       </AnimatePresence>
     </div>
