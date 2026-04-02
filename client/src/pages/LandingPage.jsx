@@ -6,78 +6,77 @@ export default function LandingPage({ onRegister }) {
   const [category, setCategory] = useState("All");
 
   const events = [
-    {
-      id: 1,
-      title: "Hackathon 2026",
-      description: "Build amazing projects",
-      category: "Technical",
-      image: "https://source.unsplash.com/400x300/?coding"
-    },
-    {
-      id: 2,
-      title: "Coding Contest",
-      description: "Compete with top coders",
-      category: "Technical",
-      image: "https://source.unsplash.com/400x300/?programming"
-    },
-    {
-      id: 3,
-      title: "Tech Workshop",
-      description: "Learn new technologies",
-      category: "Workshop",
-      image: "https://source.unsplash.com/400x300/?technology"
-    },
-    {
-      id: 4,
-      title: "AI & ML Seminar",
-      description: "Explore AI trends",
-      category: "Technical",
-      image: "https://source.unsplash.com/400x300/?ai"
-    },
-    {
-      id: 5,
-      title: "Web Dev Bootcamp",
-      description: "Full stack learning",
-      category: "Workshop",
-      image: "https://source.unsplash.com/400x300/?web"
-    },
-    {
-      id: 6,
-      title: "Gaming Tournament",
-      description: "Esports competition",
-      category: "Sports",
-      image: "https://source.unsplash.com/400x300/?gaming"
-    },
-    {
-      id: 7,
-      title: "Robotics Workshop",
-      description: "Build robots",
-      category: "Workshop",
-      image: "https://source.unsplash.com/400x300/?robot"
-    },
-    {
-      id: 8,
-      title: "Cultural Fest",
-      description: "Dance & music",
-      category: "Cultural",
-      image: "https://source.unsplash.com/400x300/?festival"
-    },
-    {
-      id: 9,
-      title: "Photography Contest",
-      description: "Creative shots",
-      category: "Cultural",
-      image: "https://source.unsplash.com/400x300/?photography"
-    },
-    {
-      id: 10,
-      title: "Sports Meet",
-      description: "Athletic events",
-      category: "Sports",
-      image: "https://source.unsplash.com/400x300/?sports"
-    }
-  ];
-
+  {
+    id: 1,
+    title: "Hackathon 2026",
+    description: "Build amazing projects",
+    category: "Technical",
+    image: "https://images.unsplash.com/photo-1518770660439-4636190af475"
+  },
+  {
+    id: 2,
+    title: "Coding Contest",
+    description: "Compete with top coders",
+    category: "Technical",
+    image: "https://images.unsplash.com/photo-1515879218367-8466d910aaa4"
+  },
+  {
+    id: 3,
+    title: "Tech Workshop",
+    description: "Learn new technologies",
+    category: "Workshop",
+    image: "https://images.unsplash.com/photo-1498050108023-c5249f4df085"
+  },
+  {
+    id: 4,
+    title: "AI & ML Seminar",
+    description: "Explore AI trends",
+    category: "Technical",
+    image: "https://images.unsplash.com/photo-1677442136019-21780ecad995"
+  },
+  {
+    id: 5,
+    title: "Web Dev Bootcamp",
+    description: "Full stack learning",
+    category: "Workshop",
+    image: "https://images.unsplash.com/photo-1526378722484-cc5c510c89c5"
+  },
+  {
+    id: 6,
+    title: "Gaming Tournament",
+    description: "Esports competition",
+    category: "Sports",
+    image: "https://images.unsplash.com/photo-1605902711622-cfb43c44367f"
+  },
+  {
+    id: 7,
+    title: "Robotics Workshop",
+    description: "Build robots",
+    category: "Workshop",
+    image: "https://images.unsplash.com/photo-1581090700227-1e8e5c3cce47"
+  },
+  {
+    id: 8,
+    title: "Cultural Fest",
+    description: "Dance & music",
+    category: "Cultural",
+    image: "https://images.unsplash.com/photo-1506157786151-b8491531f063"
+  },
+  {
+    id: 9,
+    title: "Photography Contest",
+    description: "Creative shots",
+    category: "Cultural",
+    image: "https://images.unsplash.com/photo-1492724441997-5dc865305da7"
+  },
+  {
+    id: 10,
+    title: "Sports Meet",
+    description: "Athletic events",
+    category: "Sports",
+    image: "https://images.unsplash.com/photo-1508609349937-5ec4ae374ebf"
+  }
+];
   const categories = ["All", "Technical", "Workshop", "Sports", "Cultural"];
 
   const filteredEvents = events
