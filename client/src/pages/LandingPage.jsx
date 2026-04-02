@@ -11,70 +11,63 @@ export default function LandingPage({ onRegister }) {
     title: "Hackathon 2026",
     description: "Build amazing projects",
     category: "Technical",
-    image: "https://images.unsplash.com/photo-1518770660439-4636190af475"
+    image: "https://www.cpduk.co.uk/sites/default/files/news-imported/cpd-product-marketing-alliance-best-practices-hackathon.jpg"
   },
   {
     id: 2,
     title: "Coding Contest",
     description: "Compete with top coders",
     category: "Technical",
-    image: "https://images.unsplash.com/photo-1515879218367-8466d910aaa4"
+    image: "https://d1csarkz8obe9u.cloudfront.net/posterpreviews/coding-competition-design-template-87dba6fa6e8291b8fe5e29abc492288a_screen.jpg"
   },
   {
     id: 3,
     title: "Tech Workshop",
     description: "Learn new technologies",
     category: "Workshop",
-    image: "https://images.unsplash.com/photo-1498050108023-c5249f4df085"
+    image: "https://img.freepik.com/free-photo/people-repairing-computer-chips_23-2150880942.jpg"
   },
   {
     id: 4,
     title: "AI & ML Seminar",
     description: "Explore AI trends",
     category: "Technical",
-    image: "https://images.unsplash.com/photo-1677442136019-21780ecad995"
+    image: "https://aiml.sairam.edu.in/wp-content/uploads/sites/16/2023/11/5technical-1.1.jpg"
   },
   {
     id: 5,
     title: "Web Dev Bootcamp",
     description: "Full stack learning",
     category: "Workshop",
-    image: "https://images.unsplash.com/photo-1526378722484-cc5c510c89c5"
+    image: "https://t4.ftcdn.net/jpg/08/61/69/45/360_F_861694590_3jqiyNFhOfL3LVpgmLQ7GmiNq6esOu6T.jpg"
   },
   {
     id: 6,
     title: "Gaming Tournament",
     description: "Esports competition",
     category: "Sports",
-    image: "https://images.unsplash.com/photo-1605902711622-cfb43c44367f"
+    image: "https://gamespace.com/wp-content/uploads/2021/04/Tournaments.jpg"
   },
   {
     id: 7,
-    title: "Robotics Workshop",
-    description: "Build robots",
+    title: "Robotics Bootcamp",
+    description: "Build and program robots",
     category: "Workshop",
-    image: "https://images.unsplash.com/photo-1581090700227-1e8e5c3cce47"
+    image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRoHKIS4npZUnOIosoWywIylyuv3WZpG37QYg&s"
   },
   {
     id: 8,
-    title: "Cultural Fest",
-    description: "Dance & music",
+    title: "Photography Contest",
+    description: "Show your creativity",
     category: "Cultural",
-    image: "https://images.unsplash.com/photo-1506157786151-b8491531f063"
+    image: "https://images.unsplash.com/photo-1542038784456-1ea8e935640e"
   },
   {
     id: 9,
-    title: "Photography Contest",
-    description: "Creative shots",
-    category: "Cultural",
-    image: "https://images.unsplash.com/photo-1492724441997-5dc865305da7"
-  },
-  {
-    id: 10,
     title: "Sports Meet",
-    description: "Athletic events",
+    description: "Participate in athletic events",
     category: "Sports",
-    image: "https://images.unsplash.com/photo-1508609349937-5ec4ae374ebf"
+    image: "https://img.freepik.com/free-photo/sports-tools_53876-138077.jpg"
   }
 ];
   const categories = ["All", "Technical", "Workshop", "Sports", "Cultural"];
