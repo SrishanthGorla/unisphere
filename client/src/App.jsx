@@ -4,6 +4,7 @@ import LandingPage from "./pages/LandingPage";
 import Dashboard from "./pages/Dashboard";
 import Auth from "./pages/Auth";
 import Profile from "./pages/Profile";
+import Contact from "./pages/Contact";
 
 function App() {
   const [user, setUser] = useState(null);
@@ -34,7 +35,7 @@ function App() {
   if (!user) return <Auth onLogin={handleLogin} />;
 
   return (
-    <div className={dark ? "bg-gray-950 text-white" : "bg-white text-black"}>
+    <div className={dark ? "bg-gray-950 text-white min-h-screen" : "bg-white text-black min-h-screen"}>
       
       {/* NAVBAR */}
       <div className="flex justify-between items-center p-4 bg-black text-white relative">
@@ -74,6 +75,17 @@ function App() {
                 Profile
               </button>
 
+              {/* ✅ NEW CONTACT BUTTON */}
+              <button
+                onClick={() => {
+                  setPage("contact");
+                  setMenuOpen(false);
+                }}
+                className="text-left hover:bg-gray-700 p-2 rounded"
+              >
+                Contact
+              </button>
+
               <button
                 onClick={() => setDark(!dark)}
                 className="text-left hover:bg-gray-700 p-2 rounded"
@@ -107,12 +119,17 @@ function App() {
           {page === "home" && (
             <LandingPage onRegister={handleRegisterEvent} />
           )}
+
           {page === "dashboard" && (
             <Dashboard registered={registered} />
           )}
+
           {page === "profile" && (
             <Profile user={user} setUser={setUser} />
           )}
+
+          {/* ✅ NEW CONTACT PAGE */}
+          {page === "contact" && <Contact />}
         </motion.div>
       </AnimatePresence>
     </div>
