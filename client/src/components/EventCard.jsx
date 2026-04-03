@@ -5,15 +5,13 @@ export default function EventCard({ event, onRegister }) {
   const [showTicket, setShowTicket] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
 
-  const handleRegister = () => {
-    onRegister(event);
-    setShowTicket(true);
-  };
+  // 🧠 SAFE DATE PARSE
+  const today = new Date();
+  const eventDate = event.date ? new Date(event.date) : null;
 
-  // 🟢 STATUS LOGIC
+  // 🟢 STATUS LOGIC (IMPROVED)
   const getStatus = () => {
-    const today = new Date();
-    const eventDate = new Date(event.date);
+    if (!eventDate) return { text: "Unknown", color: "bg-gray-500" };
 
     if (eventDate.toDateString() === today.toDateString()) {
       return { text: "Ongoing", color: "bg-green-500" };
@@ -25,6 +23,19 @@ export default function EventCard({ event, onRegister }) {
   };
 
   const status = getStatus();
+
+  // ❌ CHECK IF REGISTRATION CLOSED
+  const isClosed = eventDate && eventDate < today;
+
+  const handleRegister = () => {
+    if (isClosed) {
+      alert("Registration Closed ❌");
+      return;
+    }
+
+    onRegister(event);
+    setShowTicket(true);
+  };
 
   return (
     <>
@@ -60,13 +71,22 @@ export default function EventCard({ event, onRegister }) {
             {event.category}
           </p>
 
+          {/* 📅 EXTRA INFO */}
+          <p className="text-sm text-gray-400 mt-1">📅 {event.date}</p>
+          <p className="text-sm text-gray-400">📍 {event.venue}</p>
+
           {/* BUTTONS */}
           <div className="flex gap-2 mt-4">
             <button
               onClick={handleRegister}
-              className="flex-1 bg-gradient-to-r from-purple-500 to-cyan-500 px-4 py-2 rounded-xl"
+              disabled={isClosed}
+              className={`flex-1 px-4 py-2 rounded-xl transition ${
+                isClosed
+                  ? "bg-gray-600 cursor-not-allowed"
+                  : "bg-gradient-to-r from-purple-500 to-cyan-500 hover:scale-105"
+              }`}
             >
-              Register
+              {isClosed ? "Closed ❌" : "Register"}
             </button>
 
             <button
@@ -122,10 +142,10 @@ export default function EventCard({ event, onRegister }) {
             <h2 className="text-2xl font-bold mb-3">{event.title}</h2>
 
             <p>📅 Date: {event.date}</p>
-            <p>⏰ Time: {event.time}</p>
+            <p>⏰ Time: {event.time || "N/A"}</p>
             <p>📍 Venue: {event.venue}</p>
-            <p>👨‍💼 Coordinator: {event.coordinator}</p>
-            <p>🎓 Inspector: {event.inspector}</p>
+            <p>👨‍💼 Coordinator: {event.coordinator || "N/A"}</p>
+            <p>🎓 Inspector: {event.inspector || "N/A"}</p>
 
             <button
               onClick={() => setShowDetails(false)}
