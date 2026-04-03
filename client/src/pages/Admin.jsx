@@ -3,11 +3,14 @@ import { useState, useEffect } from "react";
 export default function Admin() {
   const [events, setEvents] = useState([]);
   const [users, setUsers] = useState([]);
-  const [editingId, setEditingId] = useState(null);
-  const [showUploadMenu, setShowUploadMenu] = useState(false);
-
   const [registrations, setRegistrations] = useState({});
   const [blockedUsers, setBlockedUsers] = useState([]);
+
+  const [showUsers, setShowUsers] = useState(false);
+  const [showBlocked, setShowBlocked] = useState(false);
+
+  const [editingId, setEditingId] = useState(null);
+  const [showUploadMenu, setShowUploadMenu] = useState(false);
 
   const [form, setForm] = useState({
     title: "",
@@ -42,26 +45,19 @@ export default function Admin() {
     reader.readAsDataURL(file);
   };
 
-  // ➕ ADD / UPDATE EVENT
+  // ➕ ADD EVENT
   const handleAddOrUpdate = () => {
-    if (!form.title || !form.description || !form.date) {
+    if (!form.title || !form.description) {
       alert("Fill all fields");
       return;
     }
 
-    if (editingId) {
-      const updated = events.map(e =>
-        e.id === editingId ? { ...e, ...form } : e
-      );
-      saveEvents(updated);
-      setEditingId(null);
-    } else {
-      const newEvent = {
-        id: Date.now(),
-        ...form
-      };
-      saveEvents([...events, newEvent]);
-    }
+    const newEvent = {
+      id: Date.now(),
+      ...form
+    };
+
+    saveEvents([...events, newEvent]);
 
     setForm({
       title: "",
@@ -73,20 +69,8 @@ export default function Admin() {
     });
   };
 
-  const handleEdit = (event) => {
-    setForm(event);
-    setEditingId(event.id);
-  };
-
-  const handleDelete = (id) => {
-    const updated = events.filter(e => e.id !== id);
-    saveEvents(updated);
-  };
-
   // 🚫 BLOCK USER
   const handleBlockUser = (email) => {
-    if (blockedUsers.includes(email)) return;
-
     const updatedBlocked = [...blockedUsers, email];
     const updatedUsers = users.filter(u => u.email !== email);
 
@@ -102,81 +86,73 @@ export default function Admin() {
     setRegistrations(updatedRegs);
   };
 
-  // ✅ UNBLOCK USER
+  // ✅ UNBLOCK
   const handleUnblockUser = (email) => {
-    const updatedBlocked = blockedUsers.filter(u => u !== email);
-    localStorage.setItem("blockedUsers", JSON.stringify(updatedBlocked));
-    setBlockedUsers(updatedBlocked);
+    const updated = blockedUsers.filter(u => u !== email);
+    localStorage.setItem("blockedUsers", JSON.stringify(updated));
+    setBlockedUsers(updated);
   };
-
-  // 📊 TOTAL REGISTRATIONS COUNT
-  const totalRegistrations = Object.values(registrations).reduce(
-    (sum, arr) => sum + arr.length,
-    0
-  );
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-950 via-purple-950 to-black p-6 text-white">
 
-      <h1 className="text-3xl mb-6 font-bold">Admin Dashboard 🛠️</h1>
+      <h1 className="text-3xl mb-6 font-bold">Admin Panel 🛠️</h1>
 
-      {/* 📊 STATS */}
-      <div className="grid md:grid-cols-3 gap-4 mb-8">
-        <div className="bg-purple-600 p-4 rounded-xl text-center">
-          <p>Total Users</p>
-          <h2 className="text-3xl font-bold">{users.length}</h2>
-        </div>
+      {/* 🔽 USERS DROPDOWN */}
+      <div className="mb-4">
+        <button
+          onClick={() => setShowUsers(!showUsers)}
+          className="w-full bg-blue-600 p-3 rounded-xl text-left"
+        >
+          Users 👥 ▼
+        </button>
 
-        <div className="bg-blue-600 p-4 rounded-xl text-center">
-          <p>Total Events</p>
-          <h2 className="text-3xl font-bold">{events.length}</h2>
-        </div>
-
-        <div className="bg-green-600 p-4 rounded-xl text-center">
-          <p>Registrations</p>
-          <h2 className="text-3xl font-bold">{totalRegistrations}</h2>
-        </div>
+        {showUsers && (
+          <div className="mt-2 space-y-2">
+            {users.map(user => (
+              <div key={user.email} className="bg-white/10 p-3 rounded flex justify-between">
+                <span>{user.name} ({user.email})</span>
+                <button
+                  onClick={() => handleBlockUser(user.email)}
+                  className="bg-red-500 px-2 py-1 rounded"
+                >
+                  Block
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
-      {/* 👥 USERS */}
-      <div className="mb-8">
-        <h2 className="text-xl mb-3">Users 👥</h2>
+      {/* 🔽 BLOCKED USERS DROPDOWN */}
+      <div className="mb-6">
+        <button
+          onClick={() => setShowBlocked(!showBlocked)}
+          className="w-full bg-red-600 p-3 rounded-xl text-left"
+        >
+          Blocked Users 🚫 ▼
+        </button>
 
-        {users.map(user => (
-          <div key={user.email} className="bg-white/10 p-3 mb-2 rounded flex justify-between">
-            <span>{user.name} ({user.email})</span>
-
-            <button
-              onClick={() => handleBlockUser(user.email)}
-              className="bg-red-500 px-3 py-1 rounded"
-            >
-              Block
-            </button>
+        {showBlocked && (
+          <div className="mt-2 space-y-2">
+            {blockedUsers.map(email => (
+              <div key={email} className="bg-red-900/40 p-3 rounded flex justify-between">
+                <span>{email}</span>
+                <button
+                  onClick={() => handleUnblockUser(email)}
+                  className="bg-green-500 px-2 py-1 rounded"
+                >
+                  Unblock
+                </button>
+              </div>
+            ))}
           </div>
-        ))}
-      </div>
-
-      {/* 🚫 BLOCKED USERS */}
-      <div className="mb-8">
-        <h2 className="text-xl mb-3">Blocked Users 🚫</h2>
-
-        {blockedUsers.map(email => (
-          <div key={email} className="bg-red-900/40 p-3 mb-2 rounded flex justify-between">
-            <span>{email}</span>
-
-            <button
-              onClick={() => handleUnblockUser(email)}
-              className="bg-green-500 px-3 py-1 rounded"
-            >
-              Unblock
-            </button>
-          </div>
-        ))}
+        )}
       </div>
 
       {/* 🎟 EVENT REGISTRATIONS */}
       <div className="mb-8">
-        <h2 className="text-xl mb-3">Event Registrations 🎟️</h2>
+        <h2 className="text-xl mb-3">Registrations 🎟️</h2>
 
         {events.map(event => {
           const usersForEvent = Object.entries(registrations)
@@ -185,77 +161,85 @@ export default function Admin() {
             );
 
           return (
-            <div key={event.id} className="bg-white/10 p-4 mb-4 rounded">
-              <h3 className="font-bold">{event.title}</h3>
+            <div key={event.id} className="bg-white/10 p-4 mb-3 rounded">
+              <h3>{event.title}</h3>
 
-              {usersForEvent.length === 0 ? (
-                <p className="text-gray-400">No registrations</p>
-              ) : (
-                usersForEvent.map(([email]) => (
-                  <div key={email} className="flex justify-between bg-gray-800 p-2 mt-2 rounded">
-                    <span>{email}</span>
-
-                    <button
-                      onClick={() => handleBlockUser(email)}
-                      className="bg-red-500 px-2 py-1 rounded text-sm"
-                    >
-                      Remove
-                    </button>
-                  </div>
-                ))
-              )}
+              {usersForEvent.map(([email]) => (
+                <div key={email} className="flex justify-between bg-gray-800 p-2 mt-2 rounded">
+                  <span>{email}</span>
+                </div>
+              ))}
             </div>
           );
         })}
       </div>
 
-      {/* FORM + PREVIEW (UNCHANGED UI) */}
-      <div className="grid md:grid-cols-2 gap-6 mb-8">
+      {/* ✨ ADD EVENT (RESTORED DESIGN) */}
+      <div className="grid md:grid-cols-2 gap-6">
 
-        <div className="bg-white/10 p-6 rounded-2xl">
-          <h2>{editingId ? "Edit Event" : "Add Event"}</h2>
+        {/* FORM */}
+        <div className="bg-white/10 backdrop-blur-lg p-6 rounded-2xl border border-white/20">
+          <h2 className="mb-4">Add Event</h2>
 
           <input
             placeholder="Title"
-            className="w-full mb-2 p-2 text-black"
+            className="w-full mb-3 p-3 rounded bg-gray-800"
             value={form.title}
             onChange={(e) => setForm({ ...form, title: e.target.value })}
           />
 
           <textarea
             placeholder="Description"
-            className="w-full mb-2 p-2 text-black"
+            className="w-full mb-3 p-3 rounded bg-gray-800"
             value={form.description}
             onChange={(e) => setForm({ ...form, description: e.target.value })}
           />
 
+          {/* 📎 ATTACH BUTTON */}
+          <div className="relative">
+            <button
+              onClick={() => setShowUploadMenu(!showUploadMenu)}
+              className="bg-gray-800 px-4 py-2 rounded-xl"
+            >
+              📎 Attach
+            </button>
+
+            {showUploadMenu && (
+              <div className="absolute mt-2 bg-gray-900 p-3 rounded-xl">
+                <label className="cursor-pointer block">
+                  📸 Image
+                  <input type="file" hidden onChange={handleImage} />
+                </label>
+              </div>
+            )}
+          </div>
+
           <button
             onClick={handleAddOrUpdate}
-            className="bg-green-500 px-4 py-2"
+            className="mt-4 w-full bg-gradient-to-r from-purple-500 to-cyan-500 py-3 rounded-xl"
           >
             Save Event
           </button>
         </div>
 
-        <div className="bg-white/10 p-6 rounded-2xl">
+        {/* 👀 PREVIEW */}
+        <div className="bg-white/10 p-6 rounded-2xl border border-white/20">
           <h2>Preview</h2>
-          <p>{form.title}</p>
-        </div>
 
-      </div>
+          <div className="bg-gray-900 rounded-xl overflow-hidden mt-3">
+            {form.image && (
+              <img src={form.image} className="w-full h-40 object-cover" />
+            )}
 
-      {/* EVENT LIST */}
-      <div>
-        {events.map(event => (
-          <div key={event.id} className="bg-white/10 p-3 mb-2 flex justify-between">
-            <span>{event.title}</span>
-
-            <div>
-              <button onClick={() => handleEdit(event)}>Edit</button>
-              <button onClick={() => handleDelete(event.id)}>Delete</button>
+            <div className="p-4">
+              <h2>{form.title || "Event Title"}</h2>
+              <p className="text-gray-400 text-sm">
+                {form.description || "Description"}
+              </p>
             </div>
           </div>
-        ))}
+        </div>
+
       </div>
     </div>
   );
