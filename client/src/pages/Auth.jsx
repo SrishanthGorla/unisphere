@@ -148,7 +148,7 @@ export default function Auth({ onLogin }) {
         </button>
 
         {/* ADMIN INFO */}
-        {isLogin && (
+        {isLogin && window.location.hostname === "localhost" && (
           <p className="mt-3 text-xs text-center text-gray-400">
             Admin: admin@gmail.com / admin123
           </p>
