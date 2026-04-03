@@ -11,22 +11,32 @@ export default function Auth({ onLogin }) {
     password: ""
   });
 
-  // Load users
+  // 🔹 LOAD USERS
   useEffect(() => {
     const storedUsers = JSON.parse(localStorage.getItem("users")) || [];
     setUsers(storedUsers);
   }, []);
 
-  // Save users
+  // 🔹 SAVE USERS
   const saveUsers = (updatedUsers) => {
     localStorage.setItem("users", JSON.stringify(updatedUsers));
     setUsers(updatedUsers);
   };
 
-  // REGISTER
+  // ✅ EMAIL VALIDATION
+  const isValidEmail = (email) => {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  };
+
+  // 🔐 REGISTER
   const handleRegister = () => {
     if (!form.name || !form.email || !form.password) {
       alert("Fill all fields");
+      return;
+    }
+
+    if (!isValidEmail(form.email)) {
+      alert("Enter valid email");
       return;
     }
 
@@ -44,7 +54,7 @@ export default function Auth({ onLogin }) {
 
     const newUser = {
       ...form,
-      role: "user" // ✅ default role
+      role: "user"
     };
 
     const updatedUsers = [...users, newUser];
@@ -54,9 +64,18 @@ export default function Auth({ onLogin }) {
     setIsLogin(true);
   };
 
-  // LOGIN
+  // 🔐 LOGIN
   const handleLogin = () => {
-    // 🔥 ADMIN LOGIN (HARDCODED)
+    const blocked =
+      JSON.parse(localStorage.getItem("blockedUsers")) || [];
+
+    // 🚫 BLOCK CHECK (VERY IMPORTANT)
+    if (blocked.includes(form.email)) {
+      alert("You are blocked by admin ❌");
+      return;
+    }
+
+    // 🔥 ADMIN LOGIN
     if (form.email === "admin@gmail.com" && form.password === "admin123") {
       const adminUser = {
         name: "Admin",
@@ -69,7 +88,7 @@ export default function Auth({ onLogin }) {
       return;
     }
 
-    // NORMAL USER LOGIN
+    // 👤 NORMAL USER LOGIN
     const user = users.find(
       u => u.email === form.email && u.password === form.password
     );
@@ -128,7 +147,7 @@ export default function Auth({ onLogin }) {
           {isLogin ? "Login" : "Register"}
         </button>
 
-        {/* ADMIN INFO (for testing) */}
+        {/* ADMIN INFO */}
         {isLogin && (
           <p className="mt-3 text-xs text-center text-gray-400">
             Admin: admin@gmail.com / admin123
