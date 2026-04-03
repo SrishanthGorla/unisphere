@@ -8,8 +8,8 @@ export default function Admin() {
 
   const [showUsers, setShowUsers] = useState(false);
   const [showBlocked, setShowBlocked] = useState(false);
+  const [showRegistrations, setShowRegistrations] = useState(false);
 
-  const [editingId, setEditingId] = useState(null);
   const [showUploadMenu, setShowUploadMenu] = useState(false);
 
   const [form, setForm] = useState({
@@ -46,8 +46,8 @@ export default function Admin() {
   };
 
   // ➕ ADD EVENT
-  const handleAddOrUpdate = () => {
-    if (!form.title || !form.description) {
+  const handleAddEvent = () => {
+    if (!form.title || !form.description || !form.date || !form.venue) {
       alert("Fill all fields");
       return;
     }
@@ -98,83 +98,73 @@ export default function Admin() {
 
       <h1 className="text-3xl mb-6 font-bold">Admin Panel 🛠️</h1>
 
-      {/* 🔽 USERS DROPDOWN */}
-      <div className="mb-4">
-        <button
-          onClick={() => setShowUsers(!showUsers)}
-          className="w-full bg-blue-600 p-3 rounded-xl text-left"
-        >
-          Users 👥 ▼
-        </button>
-
-        {showUsers && (
-          <div className="mt-2 space-y-2">
-            {users.map(user => (
-              <div key={user.email} className="bg-white/10 p-3 rounded flex justify-between">
-                <span>{user.name} ({user.email})</span>
-                <button
-                  onClick={() => handleBlockUser(user.email)}
-                  className="bg-red-500 px-2 py-1 rounded"
-                >
-                  Block
-                </button>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* 🔽 BLOCKED USERS DROPDOWN */}
-      <div className="mb-6">
-        <button
-          onClick={() => setShowBlocked(!showBlocked)}
-          className="w-full bg-red-600 p-3 rounded-xl text-left"
-        >
-          Blocked Users 🚫 ▼
-        </button>
-
-        {showBlocked && (
-          <div className="mt-2 space-y-2">
-            {blockedUsers.map(email => (
-              <div key={email} className="bg-red-900/40 p-3 rounded flex justify-between">
-                <span>{email}</span>
-                <button
-                  onClick={() => handleUnblockUser(email)}
-                  className="bg-green-500 px-2 py-1 rounded"
-                >
-                  Unblock
-                </button>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* 🎟 EVENT REGISTRATIONS */}
-      <div className="mb-8">
-        <h2 className="text-xl mb-3">Registrations 🎟️</h2>
-
-        {events.map(event => {
-          const usersForEvent = Object.entries(registrations)
-            .filter(([email, evts]) =>
-              evts.some(e => e.id === event.id)
-            );
-
-          return (
-            <div key={event.id} className="bg-white/10 p-4 mb-3 rounded">
-              <h3>{event.title}</h3>
-
-              {usersForEvent.map(([email]) => (
-                <div key={email} className="flex justify-between bg-gray-800 p-2 mt-2 rounded">
-                  <span>{email}</span>
-                </div>
-              ))}
+      {/* 👥 USERS DROPDOWN */}
+      <button onClick={() => setShowUsers(!showUsers)} className="w-full bg-blue-600 p-3 rounded-xl mb-2">
+        Users 👥 ▼
+      </button>
+      {showUsers && (
+        <div className="mb-4 space-y-2">
+          {users.map(user => (
+            <div key={user.email} className="bg-white/10 p-3 rounded flex justify-between">
+              <span>{user.name} ({user.email})</span>
+              <button onClick={() => handleBlockUser(user.email)} className="bg-red-500 px-2 py-1 rounded">
+                Block
+              </button>
             </div>
-          );
-        })}
-      </div>
+          ))}
+        </div>
+      )}
 
-      {/* ✨ ADD EVENT (RESTORED DESIGN) */}
+      {/* 🚫 BLOCKED USERS */}
+      <button onClick={() => setShowBlocked(!showBlocked)} className="w-full bg-red-600 p-3 rounded-xl mb-2">
+        Blocked Users 🚫 ▼
+      </button>
+      {showBlocked && (
+        <div className="mb-4 space-y-2">
+          {blockedUsers.map(email => (
+            <div key={email} className="bg-red-900/40 p-3 rounded flex justify-between">
+              <span>{email}</span>
+              <button onClick={() => handleUnblockUser(email)} className="bg-green-500 px-2 py-1 rounded">
+                Unblock
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* 🎟 REGISTRATIONS DROPDOWN */}
+      <button onClick={() => setShowRegistrations(!showRegistrations)} className="w-full bg-green-600 p-3 rounded-xl mb-2">
+        Event Registrations 🎟️ ▼
+      </button>
+
+      {showRegistrations && (
+        <div className="mb-6 space-y-3">
+          {events.map(event => {
+            const usersForEvent = Object.entries(registrations)
+              .filter(([email, evts]) =>
+                evts.some(e => e.id === event.id)
+              );
+
+            return (
+              <div key={event.id} className="bg-white/10 p-4 rounded">
+                <h3 className="font-bold">{event.title}</h3>
+
+                {usersForEvent.length === 0 ? (
+                  <p className="text-gray-400">No registrations</p>
+                ) : (
+                  usersForEvent.map(([email]) => (
+                    <div key={email} className="bg-gray-800 p-2 mt-2 rounded">
+                      {email}
+                    </div>
+                  ))
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* ✨ ADD EVENT */}
       <div className="grid md:grid-cols-2 gap-6">
 
         {/* FORM */}
@@ -195,19 +185,41 @@ export default function Admin() {
             onChange={(e) => setForm({ ...form, description: e.target.value })}
           />
 
-          {/* 📎 ATTACH BUTTON */}
+          <select
+            className="w-full mb-3 p-3 rounded bg-gray-800"
+            value={form.category}
+            onChange={(e) => setForm({ ...form, category: e.target.value })}
+          >
+            <option>Technical</option>
+            <option>Workshop</option>
+            <option>Sports</option>
+            <option>Cultural</option>
+          </select>
+
+          <input
+            placeholder="Date"
+            className="w-full mb-3 p-3 rounded bg-gray-800"
+            value={form.date}
+            onChange={(e) => setForm({ ...form, date: e.target.value })}
+          />
+
+          <input
+            placeholder="Venue"
+            className="w-full mb-3 p-3 rounded bg-gray-800"
+            value={form.venue}
+            onChange={(e) => setForm({ ...form, venue: e.target.value })}
+          />
+
+          {/* 📎 ATTACH */}
           <div className="relative">
-            <button
-              onClick={() => setShowUploadMenu(!showUploadMenu)}
-              className="bg-gray-800 px-4 py-2 rounded-xl"
-            >
+            <button onClick={() => setShowUploadMenu(!showUploadMenu)} className="bg-gray-800 px-4 py-2 rounded-xl">
               📎 Attach
             </button>
 
             {showUploadMenu && (
               <div className="absolute mt-2 bg-gray-900 p-3 rounded-xl">
-                <label className="cursor-pointer block">
-                  📸 Image
+                <label className="cursor-pointer">
+                  📸 Upload Image
                   <input type="file" hidden onChange={handleImage} />
                 </label>
               </div>
@@ -215,7 +227,7 @@ export default function Admin() {
           </div>
 
           <button
-            onClick={handleAddOrUpdate}
+            onClick={handleAddEvent}
             className="mt-4 w-full bg-gradient-to-r from-purple-500 to-cyan-500 py-3 rounded-xl"
           >
             Save Event
@@ -233,9 +245,10 @@ export default function Admin() {
 
             <div className="p-4">
               <h2>{form.title || "Event Title"}</h2>
-              <p className="text-gray-400 text-sm">
-                {form.description || "Description"}
-              </p>
+              <p className="text-gray-400 text-sm">{form.description || "Description"}</p>
+              <p className="text-purple-400 text-sm mt-2">{form.category}</p>
+              <p className="text-sm mt-2">📅 {form.date || "Date"}</p>
+              <p className="text-sm">📍 {form.venue || "Venue"}</p>
             </div>
           </div>
         </div>
