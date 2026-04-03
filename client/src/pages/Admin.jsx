@@ -15,7 +15,7 @@ export default function Admin() {
   const [form, setForm] = useState({
     title: "",
     description: "",
-    category: "Technical",
+    category: "Choose Category",
     date: "",
     venue: "",
     image: ""
@@ -62,7 +62,7 @@ export default function Admin() {
     setForm({
       title: "",
       description: "",
-      category: "Technical",
+      category: "Choose Category",
       date: "",
       venue: "",
       image: ""
