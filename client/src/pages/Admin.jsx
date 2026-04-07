@@ -24,7 +24,12 @@ export default function Admin() {
     category: "Technical",
     date: "",
     venue: "",
-    image: ""
+    image: "",
+    isPaid: false,
+    price: 0,
+    paymentMethods: ["stripe"],
+    capacity: null,
+    waitlistEnabled: false
   });
 
   useEffect(() => {
@@ -67,7 +72,17 @@ export default function Admin() {
 
   const handleAddEvent = async () => {
     if (!form.title || !form.description || !form.date || !form.venue) {
-      alert("Fill all fields");
+      alert("Fill all required fields");
+      return;
+    }
+
+    if (form.isPaid && (!form.price || form.price <= 0)) {
+      alert("Please set a valid price for paid events");
+      return;
+    }
+
+    if (form.capacity && form.capacity <= 0) {
+      alert("Capacity must be greater than 0");
       return;
     }
 
@@ -80,7 +95,12 @@ export default function Admin() {
         category: "Technical",
         date: "",
         venue: "",
-        image: ""
+        image: "",
+        isPaid: false,
+        price: 0,
+        paymentMethods: ["stripe"],
+        capacity: null,
+        waitlistEnabled: false
       });
     } catch (error) {
       alert(error.response?.data?.message || "Unable to save event");
@@ -234,6 +254,95 @@ export default function Admin() {
             onChange={(e) => setForm({ ...form, venue: e.target.value })}
           />
 
+          {/* Paid Event Settings */}
+          <div className="mb-4 p-4 bg-gray-800/50 rounded-lg">
+            <h3 className="text-lg font-semibold mb-3">Event Pricing & Capacity</h3>
+
+            {/* Is Paid Event */}
+            <div className="flex items-center mb-3">
+              <input
+                type="checkbox"
+                id="isPaid"
+                checked={form.isPaid}
+                onChange={(e) => setForm({ ...form, isPaid: e.target.checked })}
+                className="w-4 h-4 accent-purple-500 mr-3"
+              />
+              <label htmlFor="isPaid" className="text-sm font-medium">
+                This is a paid event 💰
+              </label>
+            </div>
+
+            {/* Price Input */}
+            {form.isPaid && (
+              <div className="mb-3">
+                <label className="block text-sm font-medium mb-2">Price (₹)</label>
+                <input
+                  type="number"
+                  placeholder="Enter price in rupees"
+                  className="w-full p-3 rounded bg-gray-700 border border-gray-600 focus:border-purple-500 focus:outline-none"
+                  value={form.price}
+                  onChange={(e) => setForm({ ...form, price: parseFloat(e.target.value) || 0 })}
+                  min="0"
+                  step="0.01"
+                />
+              </div>
+            )}
+
+            {/* Payment Methods */}
+            {form.isPaid && (
+              <div className="mb-3">
+                <label className="block text-sm font-medium mb-2">Payment Methods</label>
+                <div className="space-y-2">
+                  {["stripe", "paypal", "upi", "offline"].map(method => (
+                    <label key={method} className="flex items-center">
+                      <input
+                        type="checkbox"
+                        checked={form.paymentMethods.includes(method)}
+                        onChange={(e) => {
+                          const updatedMethods = e.target.checked
+                            ? [...form.paymentMethods, method]
+                            : form.paymentMethods.filter(m => m !== method);
+                          setForm({ ...form, paymentMethods: updatedMethods });
+                        }}
+                        className="w-4 h-4 accent-purple-500 mr-3"
+                      />
+                      <span className="text-sm capitalize">{method === "upi" ? "UPI" : method}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Capacity Settings */}
+            <div className="mb-3">
+              <label className="block text-sm font-medium mb-2">Capacity (leave empty for unlimited)</label>
+              <input
+                type="number"
+                placeholder="Maximum number of participants"
+                className="w-full p-3 rounded bg-gray-700 border border-gray-600 focus:border-purple-500 focus:outline-none"
+                value={form.capacity || ""}
+                onChange={(e) => setForm({ ...form, capacity: e.target.value ? parseInt(e.target.value) : null })}
+                min="1"
+              />
+            </div>
+
+            {/* Waitlist */}
+            {form.capacity && (
+              <div className="flex items-center">
+                <input
+                  type="checkbox"
+                  id="waitlistEnabled"
+                  checked={form.waitlistEnabled}
+                  onChange={(e) => setForm({ ...form, waitlistEnabled: e.target.checked })}
+                  className="w-4 h-4 accent-purple-500 mr-3"
+                />
+                <label htmlFor="waitlistEnabled" className="text-sm font-medium">
+                  Enable waitlist when capacity is full ⏳
+                </label>
+              </div>
+            )}
+          </div>
+
           <div className="relative">
             <button
               onClick={() => setShowUploadMenu(!showUploadMenu)}
@@ -274,6 +383,33 @@ export default function Admin() {
               <p className="text-purple-400 text-sm mt-2">{form.category}</p>
               <p className="text-sm mt-2">📅 {form.date || "Date"}</p>
               <p className="text-sm">📍 {form.venue || "Venue"}</p>
+
+              {/* Paid Event Preview */}
+              {form.isPaid && (
+                <div className="mt-3 p-2 bg-green-600/20 rounded border border-green-500/30">
+                  <p className="text-green-400 text-sm font-semibold">💰 Paid Event - ₹{form.price}</p>
+                  <p className="text-xs text-gray-300 mt-1">
+                    Payment Methods: {form.paymentMethods.map(m => m === "upi" ? "UPI" : m.charAt(0).toUpperCase() + m.slice(1)).join(", ")}
+                  </p>
+                </div>
+              )}
+
+              {/* Capacity Preview */}
+              {form.capacity && (
+                <div className="mt-2 p-2 bg-blue-600/20 rounded border border-blue-500/30">
+                  <p className="text-blue-400 text-sm">
+                    👥 Capacity: {form.capacity}
+                    {form.waitlistEnabled && " (Waitlist enabled)"}
+                  </p>
+                </div>
+              )}
+
+              {/* Free Event Badge */}
+              {!form.isPaid && (
+                <div className="mt-2 p-2 bg-blue-600/20 rounded border border-blue-500/30">
+                  <p className="text-blue-400 text-sm">🆓 Free Event</p>
+                </div>
+              )}
             </div>
           </div>
         </div>
