@@ -86,6 +86,8 @@ export const fetchCurrentUser = (id) => api.get(`/auth/me/${id}`);
 export const updateProfile = (id, payload) => api.put(`/auth/profile/${id}`, payload);
 export const fetchEvents = () => api.get("/events");
 export const addEvent = (payload) => api.post("/events/create", payload);
+export const updateEvent = (id, payload) => api.put(`/events/${id}`, payload);
+export const deleteEvent = (id) => api.delete(`/events/${id}`);
 export const registerEvent = (payload) => api.post("/registrations", payload);
 export const fetchRegistrations = (userId) => api.get(`/registrations/my/${userId}`);
 export const fetchAllRegistrations = () => api.get("/registrations");

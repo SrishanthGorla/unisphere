@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import {
   addEvent,
+  updateEvent,
+  deleteEvent,
   blockUser,
   fetchAllRegistrations,
   fetchEvents,
@@ -17,6 +19,7 @@ export default function Admin() {
   const [showBlocked, setShowBlocked] = useState(false);
   const [showRegistrations, setShowRegistrations] = useState(false);
   const [showUploadMenu, setShowUploadMenu] = useState(false);
+  const [editingEvent, setEditingEvent] = useState(null);
 
   const [form, setForm] = useState({
     title: "",
@@ -105,6 +108,95 @@ export default function Admin() {
     } catch (error) {
       alert(error.response?.data?.message || "Unable to save event");
     }
+  };
+
+  const handleEditEvent = (event) => {
+    setEditingEvent(event);
+    setForm({
+      title: event.title,
+      description: event.description,
+      category: event.category,
+      date: event.date,
+      venue: event.venue,
+      image: event.image || "",
+      isPaid: event.isPaid || false,
+      price: event.price || 0,
+      paymentMethods: event.paymentMethods || ["stripe"],
+      capacity: event.capacity || null,
+      waitlistEnabled: event.waitlistEnabled || false
+    });
+  };
+
+  const handleUpdateEvent = async () => {
+    if (!form.title || !form.description || !form.date || !form.venue) {
+      alert("Fill all required fields");
+      return;
+    }
+
+    if (form.isPaid && (!form.price || form.price <= 0)) {
+      alert("Please set a valid price for paid events");
+      return;
+    }
+
+    if (form.capacity && form.capacity <= 0) {
+      alert("Capacity must be greater than 0");
+      return;
+    }
+
+    try {
+      const response = await updateEvent(editingEvent.id, form);
+      setEvents((prev) => prev.map(event =>
+        event.id === editingEvent.id ? { ...response.data, id: response.data._id } : event
+      ));
+      setEditingEvent(null);
+      setForm({
+        title: "",
+        description: "",
+        category: "Technical",
+        date: "",
+        venue: "",
+        image: "",
+        isPaid: false,
+        price: 0,
+        paymentMethods: ["stripe"],
+        capacity: null,
+        waitlistEnabled: false
+      });
+      alert("Event updated successfully!");
+    } catch (error) {
+      alert(error.response?.data?.message || "Unable to update event");
+    }
+  };
+
+  const handleDeleteEvent = async (eventId) => {
+    if (!confirm("Are you sure you want to delete this event? This action cannot be undone.")) {
+      return;
+    }
+
+    try {
+      await deleteEvent(eventId);
+      setEvents((prev) => prev.filter(event => event.id !== eventId));
+      alert("Event deleted successfully!");
+    } catch (error) {
+      alert(error.response?.data?.message || "Unable to delete event");
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setEditingEvent(null);
+    setForm({
+      title: "",
+      description: "",
+      category: "Technical",
+      date: "",
+      venue: "",
+      image: "",
+      isPaid: false,
+      price: 0,
+      paymentMethods: ["stripe"],
+      capacity: null,
+      waitlistEnabled: false
+    });
   };
 
   const handleBlockUser = async (userId) => {
@@ -213,7 +305,7 @@ export default function Admin() {
 
       <div className="grid md:grid-cols-2 gap-6">
         <div className="bg-white/10 backdrop-blur-lg p-6 rounded-2xl border border-white/20">
-          <h2 className="mb-4">Add Event</h2>
+          <h2 className="mb-4">{editingEvent ? "Edit Event" : "Add Event"}</h2>
 
           <input
             placeholder="Title"
@@ -241,6 +333,7 @@ export default function Admin() {
           </select>
 
           <input
+            type="date"
             placeholder="Date"
             className="w-full mb-3 p-3 rounded bg-gray-800"
             value={form.date}
@@ -362,11 +455,20 @@ export default function Admin() {
           </div>
 
           <button
-            onClick={handleAddEvent}
+            onClick={editingEvent ? handleUpdateEvent : handleAddEvent}
             className="mt-4 w-full bg-gradient-to-r from-purple-500 to-cyan-500 py-3 rounded-xl"
           >
-            Save Event
+            {editingEvent ? "Update Event" : "Save Event"}
           </button>
+
+          {editingEvent && (
+            <button
+              onClick={handleCancelEdit}
+              className="mt-2 w-full bg-gray-600 py-3 rounded-xl"
+            >
+              Cancel Edit
+            </button>
+          )}
         </div>
 
         <div className="bg-white/10 p-6 rounded-2xl border border-white/20">
@@ -413,6 +515,55 @@ export default function Admin() {
             </div>
           </div>
         </div>
+      </div>
+
+      {/* Events List Section */}
+      <div className="mt-8 bg-white/10 backdrop-blur-lg p-6 rounded-2xl border border-white/20">
+        <h2 className="mb-4">Manage Events ({events.length})</h2>
+
+        {events.length === 0 ? (
+          <p className="text-gray-400">No events created yet.</p>
+        ) : (
+          <div className="space-y-4">
+            {events.map((event) => (
+              <div key={event.id} className="bg-gray-800/50 p-4 rounded-lg border border-gray-700">
+                <div className="flex justify-between items-start">
+                  <div className="flex-1">
+                    <h3 className="text-lg font-semibold text-white">{event.title}</h3>
+                    <p className="text-gray-300 text-sm mt-1">{event.description}</p>
+                    <div className="flex flex-wrap gap-4 mt-2 text-sm text-gray-400">
+                      <span>📅 {new Date(event.date).toLocaleDateString()}</span>
+                      <span>📍 {event.venue}</span>
+                      <span>🏷️ {event.category}</span>
+                      {event.isPaid ? (
+                        <span className="text-green-400">💰 ₹{event.price}</span>
+                      ) : (
+                        <span className="text-blue-400">🆓 Free</span>
+                      )}
+                      {event.capacity && (
+                        <span className="text-purple-400">👥 {event.currentRegistrations || 0}/{event.capacity}</span>
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex gap-2 ml-4">
+                    <button
+                      onClick={() => handleEditEvent(event)}
+                      className="bg-blue-600 hover:bg-blue-700 px-3 py-2 rounded-lg text-sm font-medium transition-colors"
+                    >
+                      ✏️ Edit
+                    </button>
+                    <button
+                      onClick={() => handleDeleteEvent(event.id)}
+                      className="bg-red-600 hover:bg-red-700 px-3 py-2 rounded-lg text-sm font-medium transition-colors"
+                    >
+                      🗑️ Delete
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
