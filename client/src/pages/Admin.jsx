@@ -10,7 +10,7 @@ import {
   unblockUser
 } from "../api";
 
-export default function Admin() {
+export default function Admin({ onEventCreated }) {
   const [events, setEvents] = useState([]);
   const [users, setUsers] = useState([]);
   const [registrations, setRegistrations] = useState([]);
@@ -105,6 +105,10 @@ export default function Admin() {
         capacity: null,
         waitlistEnabled: false
       });
+      if (onEventCreated) {
+        onEventCreated({ ...response.data, id: response.data._id });
+      }
+      alert("Event created successfully!");
     } catch (error) {
       alert(error.response?.data?.message || "Unable to save event");
     }

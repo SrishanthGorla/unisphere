@@ -20,6 +20,7 @@ function App() {
   const [registered, setRegistered] = useState([]);
   const [dark, setDark] = useState(true);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [eventRefreshKey, setEventRefreshKey] = useState(0);
   const [notifications, setNotifications] = useState([
     { id: 1, message: "New event 'AI & ML Seminar' added! Register now.", type: "info" },
     { id: 2, message: "Don't miss the upcoming Hackathon 2026!", type: "warning" }
@@ -92,6 +93,10 @@ function App() {
       console.error(error);
       alert(error.response?.data?.message || "Registration failed.");
     }
+  };
+
+  const handleEventCreated = (newEvent) => {
+    setEventRefreshKey(prev => prev + 1);
   };
 
   if (!user) return <Auth onLogin={handleLogin} />;
@@ -332,14 +337,14 @@ function App() {
           >
             {currentPage === "checkout" && <CheckoutPage user={user} />}
             {currentPage === "payment-completed" && <PaymentCompleted />}
-            {currentPage === "home" && <LandingPage onRegister={handleRegisterEvent} />}
+            {currentPage === "home" && <LandingPage onRegister={handleRegisterEvent} eventRefreshKey={eventRefreshKey} />}
             {currentPage === "dashboard" && <Dashboard registered={registered} user={user} />}
             {currentPage === "profile" && <Profile user={user} setUser={setUser} registered={registered} />}
             {currentPage === "contact" && <Contact />}
             {currentPage === "about" && <About />}
             {currentPage === "terms" && <TermsOfService />}
             {currentPage === "privacy" && <PrivacyPolicy />}
-            {currentPage === "admin" && user.role === "admin" && <Admin />}
+            {currentPage === "admin" && user.role === "admin" && <Admin onEventCreated={handleEventCreated} />}
             {currentPage === "auth" && <Auth onLogin={handleLogin} />}
           </motion.div>
         </ErrorBoundary>

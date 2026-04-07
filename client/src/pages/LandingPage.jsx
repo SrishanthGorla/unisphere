@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import EventCard from "../components/EventCard";
 import { fetchEvents } from "../api";
 
-export default function LandingPage({ onRegister }) {
+export default function LandingPage({ onRegister, eventRefreshKey }) {
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("All");
   const [sort, setSort] = useState("default");
@@ -133,7 +133,7 @@ export default function LandingPage({ onRegister }) {
     };
 
     loadEvents();
-  }, []);
+  }, [eventRefreshKey]);
 
   // Find next upcoming event for hero section
   const getNextEvent = () => {
