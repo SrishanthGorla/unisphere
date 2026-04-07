@@ -1,35 +1,19 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import { loginUser, registerUser } from "../api";
 
 export default function Auth({ onLogin }) {
   const [isLogin, setIsLogin] = useState(true);
-
-  const [users, setUsers] = useState([]);
-
   const [form, setForm] = useState({
     name: "",
     email: "",
     password: ""
   });
 
-  // 🔹 LOAD USERS
-  useEffect(() => {
-    const storedUsers = JSON.parse(localStorage.getItem("users")) || [];
-    setUsers(storedUsers);
-  }, []);
-
-  // 🔹 SAVE USERS
-  const saveUsers = (updatedUsers) => {
-    localStorage.setItem("users", JSON.stringify(updatedUsers));
-    setUsers(updatedUsers);
-  };
-
-  // ✅ EMAIL VALIDATION
   const isValidEmail = (email) => {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   };
 
-  // 🔐 REGISTER
-  const handleRegister = () => {
+  const handleRegister = async () => {
     if (!form.name || !form.email || !form.password) {
       alert("Fill all fields");
       return;
@@ -45,68 +29,37 @@ export default function Auth({ onLogin }) {
       return;
     }
 
-    const existing = users.find(u => u.email === form.email);
-
-    if (existing) {
-      alert("User already exists");
-      return;
+    try {
+      await registerUser({
+        name: form.name,
+        email: form.email,
+        password: form.password
+      });
+      alert("Registered successfully!");
+      setIsLogin(true);
+    } catch (error) {
+      alert(error.response?.data?.message || "Registration failed");
     }
-
-    const newUser = {
-      ...form,
-      role: "user"
-    };
-
-    const updatedUsers = [...users, newUser];
-    saveUsers(updatedUsers);
-
-    alert("Registered successfully!");
-    setIsLogin(true);
   };
 
-  // 🔐 LOGIN
-  const handleLogin = () => {
-    const blocked =
-      JSON.parse(localStorage.getItem("blockedUsers")) || [];
-
-    // 🚫 BLOCK CHECK (VERY IMPORTANT)
-    if (blocked.includes(form.email)) {
-      alert("You are blocked by admin ❌");
-      return;
-    }
-
-    // 🔥 ADMIN LOGIN
-    if (form.email === "admin@gmail.com" && form.password === "admin123") {
-      const adminUser = {
-        name: "Admin",
+  const handleLogin = async () => {
+    try {
+      const response = await loginUser({
         email: form.email,
-        role: "admin"
-      };
+        password: form.password
+      });
 
-      localStorage.setItem("currentUser", JSON.stringify(adminUser));
-      onLogin(adminUser);
-      return;
+      const user = response.data;
+      localStorage.setItem("currentUser", JSON.stringify(user));
+      onLogin(user);
+    } catch (error) {
+      alert(error.response?.data?.message || "Invalid credentials");
     }
-
-    // 👤 NORMAL USER LOGIN
-    const user = users.find(
-      u => u.email === form.email && u.password === form.password
-    );
-
-    if (!user) {
-      alert("Invalid credentials");
-      return;
-    }
-
-    localStorage.setItem("currentUser", JSON.stringify(user));
-    onLogin(user);
   };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-950 to-purple-950 px-4">
-      
       <div className="bg-white/10 backdrop-blur-lg p-8 rounded-2xl w-full max-w-sm text-white shadow-xl">
-        
         <h1 className="text-2xl mb-4 text-center font-bold">
           {isLogin ? "Login 🔐" : "Register 📝"}
         </h1>
@@ -147,7 +100,6 @@ export default function Auth({ onLogin }) {
           {isLogin ? "Login" : "Register"}
         </button>
 
-        {/* ADMIN INFO */}
         {isLogin && window.location.hostname === "localhost" && (
           <p className="mt-3 text-xs text-center text-gray-400">
             Admin: admin@gmail.com / admin123

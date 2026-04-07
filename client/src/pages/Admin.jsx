@@ -1,39 +1,59 @@
 import { useState, useEffect } from "react";
+import {
+  addEvent,
+  blockUser,
+  fetchAllRegistrations,
+  fetchEvents,
+  fetchUsers,
+  unblockUser
+} from "../api";
 
 export default function Admin() {
   const [events, setEvents] = useState([]);
   const [users, setUsers] = useState([]);
-  const [registrations, setRegistrations] = useState({});
-  const [blockedUsers, setBlockedUsers] = useState([]);
+  const [registrations, setRegistrations] = useState([]);
 
   const [showUsers, setShowUsers] = useState(false);
   const [showBlocked, setShowBlocked] = useState(false);
   const [showRegistrations, setShowRegistrations] = useState(false);
-
   const [showUploadMenu, setShowUploadMenu] = useState(false);
 
   const [form, setForm] = useState({
     title: "",
     description: "",
-    category: "Choose Category",
+    category: "Technical",
     date: "",
     venue: "",
     image: ""
   });
 
   useEffect(() => {
-    setEvents(JSON.parse(localStorage.getItem("events")) || []);
-    setUsers(JSON.parse(localStorage.getItem("users")) || []);
-    setRegistrations(JSON.parse(localStorage.getItem("userRegistrations")) || {});
-    setBlockedUsers(JSON.parse(localStorage.getItem("blockedUsers")) || []);
+    loadData();
   }, []);
 
-  const saveEvents = (updated) => {
-    localStorage.setItem("events", JSON.stringify(updated));
-    setEvents(updated);
+  const loadData = async () => {
+    try {
+      const [eventsRes, usersRes, registrationsRes] = await Promise.all([
+        fetchEvents(),
+        fetchUsers(),
+        fetchAllRegistrations()
+      ]);
+
+      setEvents(eventsRes.data.map((event) => ({ ...event, id: event._id })));
+      setUsers(usersRes.data.map((user) => ({ ...user, id: user._id })));
+      setRegistrations(
+        registrationsRes.data.map((registration) => ({
+          ...registration,
+          id: registration._id,
+          user: registration.userId,
+          event: registration.eventId
+        }))
+      );
+    } catch (error) {
+      console.error(error);
+    }
   };
 
-  // 📸 IMAGE UPLOAD
   const handleImage = (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -45,86 +65,93 @@ export default function Admin() {
     reader.readAsDataURL(file);
   };
 
-  // ➕ ADD EVENT
-  const handleAddEvent = () => {
+  const handleAddEvent = async () => {
     if (!form.title || !form.description || !form.date || !form.venue) {
       alert("Fill all fields");
       return;
     }
 
-    const newEvent = {
-      id: Date.now(),
-      ...form
-    };
-
-    saveEvents([...events, newEvent]);
-
-    setForm({
-      title: "",
-      description: "",
-      category: "Choose Category",
-      date: "",
-      venue: "",
-      image: ""
-    });
+    try {
+      const response = await addEvent(form);
+      setEvents((prev) => [...prev, { ...response.data, id: response.data._id }]);
+      setForm({
+        title: "",
+        description: "",
+        category: "Technical",
+        date: "",
+        venue: "",
+        image: ""
+      });
+    } catch (error) {
+      alert(error.response?.data?.message || "Unable to save event");
+    }
   };
 
-  // 🚫 BLOCK USER
-  const handleBlockUser = (email) => {
-    const updatedBlocked = [...blockedUsers, email];
-    const updatedUsers = users.filter(u => u.email !== email);
-
-    const updatedRegs = { ...registrations };
-    delete updatedRegs[email];
-
-    localStorage.setItem("blockedUsers", JSON.stringify(updatedBlocked));
-    localStorage.setItem("users", JSON.stringify(updatedUsers));
-    localStorage.setItem("userRegistrations", JSON.stringify(updatedRegs));
-
-    setBlockedUsers(updatedBlocked);
-    setUsers(updatedUsers);
-    setRegistrations(updatedRegs);
+  const handleBlockUser = async (userId) => {
+    try {
+      await blockUser(userId);
+      await loadData();
+    } catch (error) {
+      alert("Unable to block user.");
+    }
   };
 
-  // ✅ UNBLOCK
-  const handleUnblockUser = (email) => {
-    const updated = blockedUsers.filter(u => u !== email);
-    localStorage.setItem("blockedUsers", JSON.stringify(updated));
-    setBlockedUsers(updated);
+  const handleUnblockUser = async (userId) => {
+    try {
+      await unblockUser(userId);
+      await loadData();
+    } catch (error) {
+      alert("Unable to unblock user.");
+    }
   };
+
+  const blockedUsers = users.filter((user) => user.blocked);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-950 via-purple-950 to-black p-6 text-white">
-
       <h1 className="text-3xl mb-6 font-bold">Admin Panel 🛠️</h1>
 
-      {/* 👥 USERS DROPDOWN */}
-      <button onClick={() => setShowUsers(!showUsers)} className="w-full bg-blue-600 p-3 rounded-xl mb-2">
+      <button
+        onClick={() => setShowUsers(!showUsers)}
+        className="w-full bg-blue-600 p-3 rounded-xl mb-2"
+      >
         Users 👥 ▼
       </button>
       {showUsers && (
         <div className="mb-4 space-y-2">
-          {users.map(user => (
-            <div key={user.email} className="bg-white/10 p-3 rounded flex justify-between">
-              <span>{user.name} ({user.email})</span>
-              <button onClick={() => handleBlockUser(user.email)} className="bg-red-500 px-2 py-1 rounded">
-                Block
-              </button>
+          {users.map((user) => (
+            <div key={user.id} className="bg-white/10 p-3 rounded flex justify-between">
+              <span>
+                {user.name} ({user.email})
+              </span>
+              {!user.blocked && (
+                <button
+                  onClick={() => handleBlockUser(user.id)}
+                  className="bg-red-500 px-2 py-1 rounded"
+                >
+                  Block
+                </button>
+              )}
             </div>
           ))}
         </div>
       )}
 
-      {/* 🚫 BLOCKED USERS */}
-      <button onClick={() => setShowBlocked(!showBlocked)} className="w-full bg-red-600 p-3 rounded-xl mb-2">
+      <button
+        onClick={() => setShowBlocked(!showBlocked)}
+        className="w-full bg-red-600 p-3 rounded-xl mb-2"
+      >
         Blocked Users 🚫 ▼
       </button>
       {showBlocked && (
         <div className="mb-4 space-y-2">
-          {blockedUsers.map(email => (
-            <div key={email} className="bg-red-900/40 p-3 rounded flex justify-between">
-              <span>{email}</span>
-              <button onClick={() => handleUnblockUser(email)} className="bg-green-500 px-2 py-1 rounded">
+          {blockedUsers.map((user) => (
+            <div key={user.id} className="bg-red-900/40 p-3 rounded flex justify-between">
+              <span>{user.email}</span>
+              <button
+                onClick={() => handleUnblockUser(user.id)}
+                className="bg-green-500 px-2 py-1 rounded"
+              >
                 Unblock
               </button>
             </div>
@@ -132,18 +159,18 @@ export default function Admin() {
         </div>
       )}
 
-      {/* 🎟 REGISTRATIONS DROPDOWN */}
-      <button onClick={() => setShowRegistrations(!showRegistrations)} className="w-full bg-green-600 p-3 rounded-xl mb-2">
+      <button
+        onClick={() => setShowRegistrations(!showRegistrations)}
+        className="w-full bg-green-600 p-3 rounded-xl mb-2"
+      >
         Event Registrations 🎟️ ▼
       </button>
-
       {showRegistrations && (
         <div className="mb-6 space-y-3">
-          {events.map(event => {
-            const usersForEvent = Object.entries(registrations)
-              .filter(([email, evts]) =>
-                evts.some(e => e.id === event.id)
-              );
+          {events.map((event) => {
+            const usersForEvent = registrations.filter(
+              (registration) => registration.event && registration.event._id === event.id
+            );
 
             return (
               <div key={event.id} className="bg-white/10 p-4 rounded">
@@ -152,9 +179,9 @@ export default function Admin() {
                 {usersForEvent.length === 0 ? (
                   <p className="text-gray-400">No registrations</p>
                 ) : (
-                  usersForEvent.map(([email]) => (
-                    <div key={email} className="bg-gray-800 p-2 mt-2 rounded">
-                      {email}
+                  usersForEvent.map((registration) => (
+                    <div key={registration.id} className="bg-gray-800 p-2 mt-2 rounded">
+                      {registration.user?.email}
                     </div>
                   ))
                 )}
@@ -164,10 +191,7 @@ export default function Admin() {
         </div>
       )}
 
-      {/* ✨ ADD EVENT */}
       <div className="grid md:grid-cols-2 gap-6">
-
-        {/* FORM */}
         <div className="bg-white/10 backdrop-blur-lg p-6 rounded-2xl border border-white/20">
           <h2 className="mb-4">Add Event</h2>
 
@@ -210,9 +234,11 @@ export default function Admin() {
             onChange={(e) => setForm({ ...form, venue: e.target.value })}
           />
 
-          {/* 📎 ATTACH */}
           <div className="relative">
-            <button onClick={() => setShowUploadMenu(!showUploadMenu)} className="bg-gray-800 px-4 py-2 rounded-xl">
+            <button
+              onClick={() => setShowUploadMenu(!showUploadMenu)}
+              className="bg-gray-800 px-4 py-2 rounded-xl"
+            >
               📎 Attach
             </button>
 
@@ -234,7 +260,6 @@ export default function Admin() {
           </button>
         </div>
 
-        {/* 👀 PREVIEW */}
         <div className="bg-white/10 p-6 rounded-2xl border border-white/20">
           <h2>Preview</h2>
 
@@ -252,7 +277,6 @@ export default function Admin() {
             </div>
           </div>
         </div>
-
       </div>
     </div>
   );

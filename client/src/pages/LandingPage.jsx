@@ -1,16 +1,18 @@
 import { useState, useEffect } from "react";
 import EventCard from "../components/EventCard";
+import { fetchEvents } from "../api";
 
 export default function LandingPage({ onRegister }) {
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("All");
   const [sort, setSort] = useState("default");
-  const [events, setEvents] = useState([]); // ✅ NOW FROM STORAGE
+  const [priceFilter, setPriceFilter] = useState("all"); // all, free, paid
+  const [availabilityFilter, setAvailabilityFilter] = useState("all"); // all, available, full
+  const [events, setEvents] = useState([]);
+  const [countdown, setCountdown] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
 
-  // ✅ DEFAULT EVENTS (ONLY FIRST TIME)
   const defaultEvents = [
     {
-      id: 1,
       title: "Hackathon 2026",
       description: "Build amazing projects",
       category: "Technical",
@@ -22,7 +24,6 @@ export default function LandingPage({ onRegister }) {
       inspector: "Prof. Rajesh, IIT Hyderabad"
     },
     {
-      id: 2,
       title: "Coding Contest",
       description: "Compete with top coders",
       category: "Technical",
@@ -34,7 +35,6 @@ export default function LandingPage({ onRegister }) {
       inspector: "Prof. Meena, NIT Warangal"
     },
     {
-      id: 3,
       title: "Tech Workshop",
       description: "Learn new technologies",
       category: "Workshop",
@@ -46,7 +46,6 @@ export default function LandingPage({ onRegister }) {
       inspector: "Prof. Arjun, JNTU"
     },
     {
-      id: 4,
       title: "AI & ML Seminar",
       description: "Explore AI trends",
       category: "Technical",
@@ -58,7 +57,6 @@ export default function LandingPage({ onRegister }) {
       inspector: "Prof. Kiran, IIIT Hyderabad"
     },
     {
-      id: 5,
       title: "Web Dev Bootcamp",
       description: "Full stack learning",
       category: "Workshop",
@@ -70,7 +68,6 @@ export default function LandingPage({ onRegister }) {
       inspector: "Prof. Ravi, Osmania University"
     },
     {
-      id: 6,
       title: "Gaming Tournament",
       description: "Esports competition",
       category: "Sports",
@@ -82,7 +79,6 @@ export default function LandingPage({ onRegister }) {
       inspector: "Prof. Vivek, SR University"
     },
     {
-      id: 7,
       title: "Robotics Bootcamp",
       description: "Build and program robots",
       category: "Workshop",
@@ -94,7 +90,6 @@ export default function LandingPage({ onRegister }) {
       inspector: "Prof. Anil, IIT Madras"
     },
     {
-      id: 8,
       title: "Photography Contest",
       description: "Show your creativity",
       category: "Cultural",
@@ -106,7 +101,6 @@ export default function LandingPage({ onRegister }) {
       inspector: "Prof. Sita, Fine Arts College"
     },
     {
-      id: 9,
       title: "Sports Meet",
       description: "Participate in athletic events",
       category: "Sports",
@@ -119,38 +113,108 @@ export default function LandingPage({ onRegister }) {
     }
   ];
 
-  // ✅ LOAD EVENTS FROM LOCALSTORAGE
   useEffect(() => {
-    const stored = JSON.parse(localStorage.getItem("events"));
+    const loadEvents = async () => {
+      try {
+        const response = await fetchEvents();
+        const serverEvents = response.data.map((event) => ({
+          ...event,
+          id: event._id
+        }));
 
-    if (stored && stored.length > 0) {
-      setEvents(stored);
-    } else {
-      localStorage.setItem("events", JSON.stringify(defaultEvents));
-      setEvents(defaultEvents);
-    }
+        if (serverEvents.length > 0) {
+          setEvents(serverEvents);
+        } else {
+          setEvents(defaultEvents);
+        }
+      } catch (error) {
+        setEvents(defaultEvents);
+      }
+    };
+
+    loadEvents();
   }, []);
+
+  // Find next upcoming event for hero section
+  const getNextEvent = () => {
+    const today = new Date();
+    const upcomingEvents = events.filter(event => new Date(event.date) > today);
+    if (upcomingEvents.length === 0) return null;
+    return upcomingEvents.sort((a, b) => new Date(a.date) - new Date(b.date))[0];
+  };
+
+  const nextEvent = getNextEvent();
+
+  // Countdown timer effect
+  useEffect(() => {
+    if (!nextEvent) return;
+
+    const interval = setInterval(() => {
+      const now = new Date().getTime();
+      const eventTime = new Date(nextEvent.date).getTime();
+      const distance = eventTime - now;
+
+      if (distance > 0) {
+        setCountdown({
+          days: Math.floor(distance / (1000 * 60 * 60 * 24)),
+          hours: Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
+          minutes: Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60)),
+          seconds: Math.floor((distance % (1000 * 60)) / 1000)
+        });
+      } else {
+        setCountdown({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+      }
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [nextEvent]);
 
   const categories = ["All", "Technical", "Workshop", "Sports", "Cultural"];
 
-  // FILTER
-  let filteredEvents = events
-    .filter(event =>
-      event.title.toLowerCase().includes(search.toLowerCase())
-    )
-    .filter(event =>
-      category === "All" ? true : event.category === category
-    );
+  const today = new Date();
+  const upcomingCount = events.filter((event) => {
+    const eventDate = new Date(event.date);
+    return eventDate > today;
+  }).length;
+  const completedCount = events.filter((event) => {
+    const eventDate = new Date(event.date);
+    return eventDate < today;
+  }).length;
+  const ongoingCount = events.filter((event) => {
+    const eventDate = new Date(event.date);
+    return eventDate.toDateString() === today.toDateString();
+  }).length;
 
-  // SORT
+  let filteredEvents = events
+    .filter((event) =>
+      event.title.toLowerCase().includes(search.toLowerCase()) ||
+      event.description.toLowerCase().includes(search.toLowerCase()) ||
+      event.venue.toLowerCase().includes(search.toLowerCase())
+    )
+    .filter((event) =>
+      category === "All" ? true : event.category === category
+    )
+    .filter((event) => {
+      if (priceFilter === "free") return !event.isPaid;
+      if (priceFilter === "paid") return event.isPaid;
+      return true;
+    })
+    .filter((event) => {
+      if (availabilityFilter === "available") {
+        return !event.capacity || event.currentRegistrations < event.capacity;
+      }
+      if (availabilityFilter === "full") {
+        return event.capacity && event.currentRegistrations >= event.capacity;
+      }
+      return true;
+    });
+
   if (sort === "name") {
     filteredEvents.sort((a, b) => a.title.localeCompare(b.title));
   }
 
   if (sort === "date") {
-    filteredEvents.sort(
-      (a, b) => new Date(a.date) - new Date(b.date)
-    );
+    filteredEvents.sort((a, b) => new Date(a.date) - new Date(b.date));
   }
 
   if (sort === "status") {
@@ -168,12 +232,76 @@ export default function LandingPage({ onRegister }) {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-950 via-purple-950 to-black p-6 md:p-10">
-      
       <h1 className="text-4xl md:text-5xl font-bold text-white mb-6">
         UniSphere Events 🚀
       </h1>
 
-      {/* SEARCH + SORT */}
+      {/* Featured Hero Section */}
+      {nextEvent && (
+        <div className="mb-8 bg-gradient-to-r from-purple-600/20 to-cyan-600/20 border border-purple-500/30 rounded-3xl p-8 backdrop-blur-sm">
+          <div className="flex flex-col md:flex-row items-center gap-6">
+            <div className="flex-1">
+              <h2 className="text-2xl md:text-3xl font-bold text-white mb-2">
+                🔥 Next Big Event
+              </h2>
+              <h3 className="text-xl md:text-2xl font-semibold text-purple-300 mb-3">
+                {nextEvent.title}
+              </h3>
+              <p className="text-gray-300 mb-4">{nextEvent.description}</p>
+              <div className="flex flex-wrap gap-4 text-sm text-gray-400 mb-4">
+                <span>📅 {nextEvent.date}</span>
+                <span>📍 {nextEvent.venue}</span>
+                <span>🏷️ {nextEvent.category}</span>
+              </div>
+              <button
+                onClick={() => onRegister(nextEvent)}
+                className="bg-gradient-to-r from-purple-500 to-cyan-500 hover:from-purple-600 hover:to-cyan-600 px-6 py-3 rounded-xl font-semibold transition-all duration-300 hover:scale-105"
+              >
+                Register Now 🚀
+              </button>
+            </div>
+            <div className="flex-shrink-0">
+              <div className="bg-black/50 rounded-2xl p-6 text-center">
+                <h4 className="text-lg font-semibold text-white mb-4">⏰ Countdown</h4>
+                <div className="grid grid-cols-4 gap-4">
+                  <div className="bg-purple-600/20 rounded-lg p-3">
+                    <div className="text-2xl font-bold text-white">{countdown.days}</div>
+                    <div className="text-xs text-gray-400">Days</div>
+                  </div>
+                  <div className="bg-purple-600/20 rounded-lg p-3">
+                    <div className="text-2xl font-bold text-white">{countdown.hours}</div>
+                    <div className="text-xs text-gray-400">Hours</div>
+                  </div>
+                  <div className="bg-purple-600/20 rounded-lg p-3">
+                    <div className="text-2xl font-bold text-white">{countdown.minutes}</div>
+                    <div className="text-xs text-gray-400">Min</div>
+                  </div>
+                  <div className="bg-purple-600/20 rounded-lg p-3">
+                    <div className="text-2xl font-bold text-white">{countdown.seconds}</div>
+                    <div className="text-xs text-gray-400">Sec</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div className="grid gap-4 md:grid-cols-3 mb-8">
+        <div className="bg-white/10 border border-white/10 rounded-3xl p-5 backdrop-blur-sm">
+          <p className="text-sm text-gray-400">Upcoming Events</p>
+          <p className="text-3xl font-bold">{upcomingCount}</p>
+        </div>
+        <div className="bg-white/10 border border-white/10 rounded-3xl p-5 backdrop-blur-sm">
+          <p className="text-sm text-gray-400">Ongoing Today</p>
+          <p className="text-3xl font-bold">{ongoingCount}</p>
+        </div>
+        <div className="bg-white/10 border border-white/10 rounded-3xl p-5 backdrop-blur-sm">
+          <p className="text-sm text-gray-400">Completed</p>
+          <p className="text-3xl font-bold">{completedCount}</p>
+        </div>
+      </div>
+
       <div className="flex flex-wrap gap-4 mb-6">
         <input
           type="text"
@@ -190,19 +318,38 @@ export default function LandingPage({ onRegister }) {
           <option value="name">Name (A-Z)</option>
           <option value="date">Date</option>
           <option value="status">Status</option>
+          <option value="popular">Most Popular</option>
+          <option value="rating">Highest Rated</option>
+        </select>
+
+        <select
+          onChange={(e) => setPriceFilter(e.target.value)}
+          className="px-4 py-3 rounded-xl bg-gray-800 text-white"
+        >
+          <option value="all">All Prices</option>
+          <option value="free">Free Only</option>
+          <option value="paid">Paid Only</option>
+        </select>
+
+        <select
+          onChange={(e) => setAvailabilityFilter(e.target.value)}
+          className="px-4 py-3 rounded-xl bg-gray-800 text-white"
+        >
+          <option value="all">All Events</option>
+          <option value="available">Available Spots</option>
+          <option value="full">Full Events</option>
         </select>
       </div>
 
-      {/* CATEGORY */}
       <div className="flex flex-wrap gap-3 mb-8">
         {categories.map((cat) => (
           <button
             key={cat}
             onClick={() => setCategory(cat)}
-            className={`px-4 py-2 rounded-xl ${
+            className={`px-6 py-3 rounded-xl font-medium transition-all duration-300 transform hover:scale-105 ${
               category === cat
-                ? "bg-purple-600 text-white"
-                : "bg-white/10 text-gray-300"
+                ? "bg-gradient-to-r from-purple-500 to-cyan-500 text-white shadow-lg"
+                : "bg-white/10 text-gray-300 hover:bg-white/20 hover:text-white"
             }`}
           >
             {cat}
@@ -210,9 +357,8 @@ export default function LandingPage({ onRegister }) {
         ))}
       </div>
 
-      {/* EVENTS */}
       <div className="grid md:grid-cols-3 gap-8">
-        {filteredEvents.map(event => (
+        {filteredEvents.map((event) => (
           <EventCard
             key={event.id}
             event={event}

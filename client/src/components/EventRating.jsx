@@ -1,0 +1,101 @@
+import { useState } from 'react';
+
+export default function EventRating({ event, registration, onRate }) {
+  const [rating, setRating] = useState(registration?.rating || 0);
+  const [review, setReview] = useState(registration?.review || '');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleSubmit = async () => {
+    if (rating === 0) {
+      alert('Please select a rating');
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      await onRate(registration._id, rating, review);
+      alert('Thank you for your feedback!');
+    } catch (error) {
+      alert('Failed to submit rating. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Only show rating if event has ended
+  const eventDate = new Date(event.date);
+  const now = new Date();
+  const canRate = eventDate < now;
+
+  if (!canRate) {
+    return null;
+  }
+
+  return (
+    <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-6 border border-white/10">
+      <h3 className="text-lg font-semibold mb-4 text-purple-400">Rate This Event</h3>
+
+      {/* Star Rating */}
+      <div className="mb-4">
+        <p className="text-sm text-gray-400 mb-2">How would you rate this event?</p>
+        <div className="flex space-x-1">
+          {[1, 2, 3, 4, 5].map((star) => (
+            <button
+              key={star}
+              onClick={() => setRating(star)}
+              className={`text-2xl transition-colors ${
+                star <= rating ? 'text-yellow-400' : 'text-gray-600 hover:text-yellow-300'
+              }`}
+            >
+              ⭐
+            </button>
+          ))}
+        </div>
+        {rating > 0 && (
+          <p className="text-sm text-gray-300 mt-1">
+            {rating === 1 && "Poor"}
+            {rating === 2 && "Fair"}
+            {rating === 3 && "Good"}
+            {rating === 4 && "Very Good"}
+            {rating === 5 && "Excellent"}
+          </p>
+        )}
+      </div>
+
+      {/* Review Text */}
+      <div className="mb-4">
+        <label className="block text-sm text-gray-400 mb-2">
+          Share your experience (optional)
+        </label>
+        <textarea
+          value={review}
+          onChange={(e) => setReview(e.target.value)}
+          placeholder="Tell us what you liked or how we can improve..."
+          className="w-full p-3 rounded-lg bg-gray-800 text-white placeholder-gray-400 border border-gray-600 focus:border-purple-500 focus:outline-none resize-none"
+          rows={3}
+          maxLength={500}
+        />
+        <p className="text-xs text-gray-500 mt-1">{review.length}/500 characters</p>
+      </div>
+
+      {/* Submit Button */}
+      <button
+        onClick={handleSubmit}
+        disabled={isSubmitting || rating === 0}
+        className={`w-full py-3 rounded-xl font-semibold transition-all ${
+          isSubmitting || rating === 0
+            ? 'bg-gray-600 cursor-not-allowed'
+            : 'bg-gradient-to-r from-purple-500 to-cyan-500 hover:from-purple-600 hover:to-cyan-600 hover:scale-105'
+        }`}
+      >
+        {isSubmitting ? 'Submitting...' : 'Submit Rating'}
+      </button>
+
+      {registration?.reviewedAt && (
+        <p className="text-xs text-gray-500 mt-2 text-center">
+          Rated on {new Date(registration.reviewedAt).toLocaleDateString()}
+        </p>
+      )}
+    </div>
+  );
+}

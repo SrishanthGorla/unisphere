@@ -1,8 +1,8 @@
-import { useState, useEffect } from "react";
+﻿import { useState, useEffect } from "react";
+import { updateProfile } from "../api";
 
-export default function Profile({ user, setUser }) {
+export default function Profile({ user, setUser, registered }) {
   const [edit, setEdit] = useState(false);
-
   const [form, setForm] = useState({
     name: "",
     email: "",
@@ -10,7 +10,6 @@ export default function Profile({ user, setUser }) {
     college: ""
   });
 
-  // Load user data
   useEffect(() => {
     if (user) {
       setForm({
@@ -22,22 +21,98 @@ export default function Profile({ user, setUser }) {
     }
   }, [user]);
 
-  const handleSave = () => {
-    const updatedUser = { ...user, ...form };
+  const handleSave = async () => {
+    try {
+      const response = await updateProfile(user._id || user.id, {
+        name: form.name,
+        phone: form.phone,
+        college: form.college
+      });
 
-    localStorage.setItem("currentUser", JSON.stringify(updatedUser));
-    setUser(updatedUser);
-
-    setEdit(false);
+      setUser(response.data);
+      localStorage.setItem("currentUser", JSON.stringify(response.data));
+      setEdit(false);
+    } catch (error) {
+      alert(error.response?.data?.message || "Unable to update profile.");
+    }
   };
+
+  // Calculate user stats
+  const today = new Date();
+  const totalRegistered = registered.length;
+  const upcomingEvents = registered.filter(event => new Date(event.date) > today).length;
+  const completedEvents = registered.filter(event => new Date(event.date) < today).length;
+  const ongoingEvents = registered.filter(event => new Date(event.date).toDateString() === today.toDateString()).length;
+
+  // Get favorite category
+  const categoryCount = {};
+  registered.forEach(event => {
+    categoryCount[event.category] = (categoryCount[event.category] || 0) + 1;
+  });
+  const favoriteCategory = Object.keys(categoryCount).length > 0 
+    ? Object.keys(categoryCount).reduce((a, b) => categoryCount[a] > categoryCount[b] ? a : b)
+    : "None";
+
+  // Calculate events this month
+  const now = new Date();
+  const eventsThisMonth = registered.filter(event => {
+    const eventDate = new Date(event.date);
+    return eventDate.getMonth() === now.getMonth() && eventDate.getFullYear() === now.getFullYear();
+  }).length;
+
+  // Calculate badges
+  const badges = [];
+  if (totalRegistered >= 5) badges.push("🎯 Event Enthusiast");
+  if (completedEvents >= 3) badges.push("🏆 Experienced");
+  if (ongoingEvents > 0) badges.push("⚡ Active Participant");
+  if (favoriteCategory !== "None") badges.push(`💖 ${favoriteCategory} Lover`);
 
   return (
     <div className="min-h-screen bg-gray-900 text-white p-6 md:p-10">
-      
       <h1 className="text-3xl mb-6">My Profile 👤</h1>
 
+      {/* User Stats Section */}
+      <div className="grid gap-4 md:grid-cols-4 mb-8">
+        <div className="bg-white/10 border border-white/10 rounded-3xl p-6 text-center">
+          <p className="text-sm text-gray-400">Total Registered</p>
+          <p className="text-3xl font-bold">{totalRegistered}</p>
+        </div>
+        <div className="bg-white/10 border border-white/10 rounded-3xl p-6 text-center">
+          <p className="text-sm text-gray-400">Upcoming</p>
+          <p className="text-3xl font-bold">{upcomingEvents}</p>
+        </div>
+        <div className="bg-white/10 border border-white/10 rounded-3xl p-6 text-center">
+          <p className="text-sm text-gray-400">Completed</p>
+          <p className="text-3xl font-bold">{completedEvents}</p>
+        </div>
+        <div className="bg-white/10 border border-white/10 rounded-3xl p-6 text-center">
+          <p className="text-sm text-gray-400">Ongoing</p>
+          <p className="text-3xl font-bold">{ongoingEvents}</p>
+        </div>
+      </div>
+
+      {/* Additional Stats */}
+      <div className="grid gap-4 md:grid-cols-2 mb-8">
+        <div className="bg-white/10 border border-white/10 rounded-3xl p-6">
+          <h3 className="text-lg font-semibold mb-2">📊 Activity Summary</h3>
+          <p className="text-sm text-gray-400">Favorite Category: <span className="text-purple-400">{favoriteCategory}</span></p>
+          <p className="text-sm text-gray-400">Events This Month: {eventsThisMonth}</p>
+        </div>
+        <div className="bg-white/10 border border-white/10 rounded-3xl p-6">
+          <h3 className="text-lg font-semibold mb-2">🏅 Achievements</h3>
+          <div className="flex flex-wrap gap-2">
+            {badges.length > 0 ? badges.map((badge, index) => (
+              <span key={index} className="bg-purple-600/20 text-purple-300 px-3 py-1 rounded-full text-sm">
+                {badge}
+              </span>
+            )) : (
+              <p className="text-sm text-gray-400">Complete more events to earn badges!</p>
+            )}
+          </div>
+        </div>
+      </div>
+
       <div className="bg-white/10 p-6 rounded-2xl max-w-md">
-        
         {edit ? (
           <>
             <input
@@ -53,9 +128,7 @@ export default function Profile({ user, setUser }) {
               type="email"
               value={form.email}
               className="w-full mb-3 p-2 rounded text-black"
-              onChange={(e) =>
-                setForm({ ...form, email: e.target.value })
-              }
+              disabled
             />
 
             <input
