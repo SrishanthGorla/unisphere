@@ -38,14 +38,20 @@ export default function Auth({ onLogin }) {
       alert("Registered successfully!");
       setIsLogin(true);
     } catch (error) {
-      alert(error.response?.data?.message || "Registration failed");
+      const message = error.response?.data?.message || error.message || "Registration failed";
+      alert(message);
     }
   };
 
   const handleLogin = async () => {
+    if (!form.email || !form.password) {
+      alert("Enter both email and password");
+      return;
+    }
+
     try {
       const response = await loginUser({
-        email: form.email,
+        email: form.email.trim(),
         password: form.password
       });
 
@@ -53,7 +59,8 @@ export default function Auth({ onLogin }) {
       localStorage.setItem("currentUser", JSON.stringify(user));
       onLogin(user);
     } catch (error) {
-      alert(error.response?.data?.message || "Invalid credentials");
+      const message = error.response?.data?.message || error.message || "Login failed";
+      alert(message);
     }
   };
 
