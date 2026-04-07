@@ -19,7 +19,7 @@ const eventSchema = new mongoose.Schema({
   // Pricing
   isPaid: { type: Boolean, default: false },
   price: { type: Number, default: 0 },
-  paymentMethods: [{ type: String, enum: ['stripe', 'paypal', 'offline'] }],
+  paymentMethods: [{ type: String, enum: ['stripe', 'paypal', 'upi', 'offline'] }],
 
   // Ratings and reviews
   averageRating: { type: Number, default: 0, min: 0, max: 5 },

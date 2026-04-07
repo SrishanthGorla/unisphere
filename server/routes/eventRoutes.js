@@ -87,10 +87,10 @@ router.post("/create", async (req, res) => {
     return res.status(201).json(event);
   } catch (error) {
     console.error('Create event error:', error);
-    if (error.name === 'ValidationError') {
+    if (error.name === 'ValidationError' || error.name === 'MongoServerError') {
       return res.status(400).json({ message: error.message });
     }
-    return res.status(500).json({ message: "Server error" });
+    return res.status(500).json({ message: error.message || "Server error" });
   }
 });
 
