@@ -38,8 +38,14 @@ app.get("*", (req, res) => {
   return res.send("UniSphere API is running. Use /api/... routes or build the client app to serve the frontend.");
 });
 
-const MONGODB_URI = process.env.MONGODB_URI || "mongodb://127.0.0.1:27017/unisphere";
+const isProduction = process.env.NODE_ENV === "production";
+const MONGODB_URI = process.env.MONGODB_URI || (!isProduction ? "mongodb://127.0.0.1:27017/unisphere" : null);
 const PORT = process.env.PORT || 5000;
+
+if (!MONGODB_URI) {
+  console.error("MONGODB_URI is required in production. Set it in Render environment variables.");
+  process.exit(1);
+}
 
 const defaultEvents = [
   {
