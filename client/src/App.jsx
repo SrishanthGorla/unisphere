@@ -333,7 +333,7 @@ function App() {
             {currentPage === "checkout" && <CheckoutPage user={user} />}
             {currentPage === "payment-completed" && <PaymentCompleted />}
             {currentPage === "home" && <LandingPage onRegister={handleRegisterEvent} />}
-            {currentPage === "dashboard" && <Dashboard registered={registered} />}
+            {currentPage === "dashboard" && <Dashboard registered={registered} user={user} />}
             {currentPage === "profile" && <Profile user={user} setUser={setUser} registered={registered} />}
             {currentPage === "contact" && <Contact />}
             {currentPage === "about" && <About />}
