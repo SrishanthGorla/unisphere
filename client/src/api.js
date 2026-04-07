@@ -1,6 +1,7 @@
 import axios from "axios";
 
-const defaultApiUrl = typeof window !== "undefined" && (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1")
+const localHosts = ["localhost", "127.0.0.1", "::1", "0.0.0.0"];
+const defaultApiUrl = typeof window !== "undefined" && localHosts.includes(window.location.hostname)
   ? "http://localhost:5000/api"
   : "/api";
 const baseURL = import.meta.env.VITE_API_URL || defaultApiUrl;
