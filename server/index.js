@@ -43,8 +43,8 @@ const MONGODB_URI = process.env.MONGODB_URI || (!isProduction ? "mongodb://127.0
 const PORT = process.env.PORT || 5000;
 
 if (!MONGODB_URI) {
-  console.error("MONGODB_URI is required in production. Set it in Render environment variables.");
-  process.exit(1);
+  console.error("MONGODB_URI is required in production. Set it in your Vercel environment variables.");
+  if (require.main === module) process.exit(1);
 }
 
 const defaultEvents = [
@@ -168,16 +168,39 @@ const seedData = async () => {
   }
 };
 
-mongoose.set("strictQuery", false);
-mongoose.connect(MONGODB_URI)
-  .then(async () => {
+const connectToDatabase = async () => {
+  if (!MONGODB_URI) {
+    throw new Error("MONGODB_URI is required in production. Set it in your Vercel environment variables.");
+  }
+
+  if (global.__mongooseConnection) {
+    return global.__mongooseConnection;
+  }
+
+  mongoose.set("strictQuery", false);
+  global.__mongooseConnection = mongoose.connect(MONGODB_URI).then(async (mongooseConnection) => {
     console.log("Connected to MongoDB");
     await seedData();
-
-    app.listen(PORT, () => {
-      console.log(`Server running on http://localhost:${PORT}`);
-    });
-  })
-  .catch((error) => {
+    return mongooseConnection;
+  }).catch((error) => {
     console.error("MongoDB connection error:", error);
+    throw error;
   });
+
+  return global.__mongooseConnection;
+};
+
+connectToDatabase().catch((error) => {
+  if (require.main === module) {
+    console.error("Failed to connect to MongoDB:", error);
+    process.exit(1);
+  }
+});
+
+if (require.main === module) {
+  app.listen(PORT, () => {
+    console.log(`Server running on http://localhost:${PORT}`);
+  });
+}
+
+module.exports = app;
