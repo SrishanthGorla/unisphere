@@ -64,6 +64,12 @@ export default function EventCard({ event, onRegister }) {
       return;
     }
 
+    // Validate event has ID
+    if (!event._id && !event.id) {
+      alert("Event information is missing. Please refresh the page.");
+      return;
+    }
+
     // If paid event, redirect to checkout
     if (event.isPaid) {
       window.location.href = `/checkout?eventId=${event._id || event.id}`;
@@ -71,12 +77,16 @@ export default function EventCard({ event, onRegister }) {
     }
 
     try {
-      await onRegister(event);
+      if (onRegister) {
+        await onRegister(event);
+      }
       setShowTicket(true);
-
-      // Refresh the page or update local state to reflect new registration count
-      window.location.reload(); // Simple refresh for now
+      // Refresh after a delay to allow registration to complete
+      setTimeout(() => {
+        window.location.reload();
+      }, 1500);
     } catch (error) {
+      console.error('Register error:', error);
       alert(error.message || "Registration failed. Please try again.");
     }
   };

@@ -7,8 +7,16 @@ const router = express.Router();
 router.post("/", async (req, res) => {
   try {
     const { userId, eventId, eventTitle } = req.body;
-    if (!userId || !eventId || !eventTitle) {
-      return res.status(400).json({ message: "Missing registration data" });
+    
+    // Validate required fields
+    if (!userId) {
+      return res.status(400).json({ message: "User ID is missing" });
+    }
+    if (!eventId) {
+      return res.status(400).json({ message: "Event ID is missing" });
+    }
+    if (!eventTitle) {
+      return res.status(400).json({ message: "Event title is missing" });
     }
 
     const existing = await Registration.findOne({ userId, eventId });
@@ -66,7 +74,7 @@ router.post("/", async (req, res) => {
     });
   } catch (error) {
     console.error('Registration error:', error);
-    return res.status(500).json({ message: "Server error" });
+    return res.status(500).json({ message: error.message || "Server error during registration" });
   }
 });
 

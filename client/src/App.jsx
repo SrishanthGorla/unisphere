@@ -81,17 +81,30 @@ function App() {
       return;
     }
 
+    if (!event || (!event._id && !event.id)) {
+      alert("Event information is missing. Please refresh the page.");
+      return;
+    }
+
     try {
-      await registerEvent({
+      const payload = {
         userId: user._id || user.id,
         eventId: event._id || event.id,
         eventTitle: event.title
-      });
+      };
+      
+      if (!payload.userId || !payload.eventId || !payload.eventTitle) {
+        alert("Registration data is incomplete. Please refresh and try again.");
+        return;
+      }
+
+      await registerEvent(payload);
       await loadRegistrations(user._id || user.id);
-      alert("Successfully registered for the event.");
+      alert("Successfully registered for the event!");
     } catch (error) {
-      console.error(error);
-      alert(error.response?.data?.message || "Registration failed.");
+      console.error('Registration error:', error);
+      const message = error.response?.data?.message || error.message || "Registration failed. Please try again.";
+      alert(message);
     }
   };
 
