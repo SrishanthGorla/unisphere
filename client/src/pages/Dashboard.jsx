@@ -1,14 +1,62 @@
-﻿import { useState, useEffect } from "react";
+﻿import { useState, useEffect, useCallback } from "react";
 import EventRating from "../components/EventRating";
-import { rateEvent, getUserPayments } from "../api";
+import { rateEvent, getUserPayments, fetchRegistrations } from "../api";
 
 export default function Dashboard({ registered, user }) {
   const [activeTab, setActiveTab] = useState("events");
   const [payments, setPayments] = useState([]);
+  const [liveRegistered, setLiveRegistered] = useState(registered || []);
+  const [lastRefresh, setLastRefresh] = useState(new Date());
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const today = new Date();
+
+  const loadRegistrations = useCallback(async () => {
+    if (!user || !user.id) return;
+    try {
+      setIsRefreshing(true);
+      const response = await fetchRegistrations(user.id);
+      const registeredEvents = response.data.map((registration) => {
+        const event = registration.eventId || {};
+        return {
+          ...registration,
+          eventId: event.id,
+          title: event.title,
+          description: event.description,
+          date: event.date,
+          time: event.time,
+          venue: event.venue,
+          coordinator: event.coordinator,
+          inspector: event.inspector,
+          category: event.category,
+          image: event.image,
+          isPaid: event.isPaid,
+          price: event.price,
+          capacity: event.capacity,
+          waitlistEnabled: event.waitlistEnabled,
+          currentRegistrations: event.currentRegistrations,
+          averageRating: event.averageRating,
+          totalReviews: event.totalReviews
+        };
+      });
+      setLiveRegistered(registeredEvents);
+      setLastRefresh(new Date());
+    } catch (error) {
+      console.error("Failed to fetch registrations:", error);
+    } finally {
+      setIsRefreshing(false);
+    }
+  }, [user]);
 
   useEffect(() => {
     if (user && user.id) {
+      loadRegistrations();
+      
+      // Auto-refresh every 2 seconds
+      const interval = setInterval(() => {
+        loadRegistrations();
+      }, 2000);
+
+      // Also fetch payments on mount
       const fetchPayments = async () => {
         try {
           const response = await getUserPayments(user.id);
@@ -19,25 +67,38 @@ export default function Dashboard({ registered, user }) {
         }
       };
       fetchPayments();
+
+      return () => clearInterval(interval);
     }
-  }, [user]);
+  }, [user, loadRegistrations]);
 
   const handleRateEvent = async (registrationId, rating, review) => {
     await rateEvent(registrationId, rating, review);
     window.location.reload();
   };
-  const upcoming = registered.filter((event) => {
+  const upcoming = liveRegistered.filter((event) => {
     const eventDate = new Date(event.date);
     return eventDate > today;
   }).length;
-  const completed = registered.filter((event) => {
+  const completed = liveRegistered.filter((event) => {
     const eventDate = new Date(event.date);
     return eventDate < today;
   }).length;
 
   return (
     <div className="min-h-screen bg-gray-900 text-white p-6 md:p-10">
-      <h1 className="text-3xl md:text-4xl mb-6">Dashboard 📊</h1>
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-3xl md:text-4xl">Dashboard 📊</h1>
+        <div className="flex items-center gap-3">
+          <div className="text-sm text-gray-400">
+            <p>Last refresh: {lastRefresh.toLocaleTimeString()}</p>
+            <p className="flex items-center gap-1">
+              <span className={`inline-block w-2 h-2 rounded-full ${isRefreshing ? 'bg-yellow-400 animate-pulse' : 'bg-green-400'}`}></span>
+              {isRefreshing ? 'Refreshing...' : '✓ Live data'}
+            </p>
+          </div>
+        </div>
+      </div>
 
       {/* Tab Navigation */}
       <div className="flex gap-2 mb-8 border-b border-white/10">
@@ -69,7 +130,7 @@ export default function Dashboard({ registered, user }) {
           <div className="grid gap-4 sm:grid-cols-3 mb-8">
             <div className="bg-white/10 border border-white/10 rounded-3xl p-6">
               <p className="text-sm text-gray-400">Total Registered</p>
-              <p className="text-3xl font-bold">{registered.length}</p>
+              <p className="text-3xl font-bold">{liveRegistered.length}</p>
             </div>
 
             <div className="bg-white/10 border border-white/10 rounded-3xl p-6">
@@ -83,13 +144,13 @@ export default function Dashboard({ registered, user }) {
             </div>
           </div>
 
-          {registered.length === 0 ? (
+          {liveRegistered.length === 0 ? (
             <div className="bg-white/10 border border-white/10 rounded-3xl p-10 text-gray-300 text-center">
               No events registered yet. Explore the home page to join a new event.
             </div>
           ) : (
             <div className="grid gap-6">
-              {registered.map((event, index) => {
+              {liveRegistered.map((event, index) => {
                 const eventDate = new Date(event.date);
                 const status = eventDate.toDateString() === today.toDateString()
                   ? "Ongoing"
@@ -143,7 +204,7 @@ export default function Dashboard({ registered, user }) {
                       <div className="mt-4">
                         <EventRating
                           event={event}
-                          registration={registered.find(reg => reg.eventId === event.id)}
+                          registration={liveRegistered.find(reg => reg.eventId === event.id)}
                           onRate={handleRateEvent}
                         />
                       </div>
