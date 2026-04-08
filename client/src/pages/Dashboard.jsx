@@ -14,10 +14,6 @@ export default function Dashboard({ registered }) {
     const eventDate = new Date(event.date);
     return eventDate > today;
   }).length;
-  const ongoing = registered.filter((event) => {
-    const eventDate = new Date(event.date);
-    return eventDate.toDateString() === today.toDateString();
-  }).length;
   const completed = registered.filter((event) => {
     const eventDate = new Date(event.date);
     return eventDate < today;

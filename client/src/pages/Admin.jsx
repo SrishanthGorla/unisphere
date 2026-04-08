@@ -65,6 +65,7 @@ export default function Admin({ onEventCreated }) {
   };
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     loadData();
   }, []);
 

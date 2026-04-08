@@ -49,9 +49,9 @@ function App() {
   };
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     const storedUser = JSON.parse(localStorage.getItem("currentUser"));
     if (storedUser) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setUser(storedUser);
       loadRegistrations(storedUser.id);
     }

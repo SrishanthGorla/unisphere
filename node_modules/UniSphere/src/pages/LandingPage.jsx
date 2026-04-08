@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import EventCard from "../components/EventCard";
 import { fetchEvents } from "../api";
 
@@ -11,7 +11,7 @@ export default function LandingPage({ onRegister, eventRefreshKey }) {
   const [events, setEvents] = useState([]);
   const [countdown, setCountdown] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
 
-  const defaultEvents = [
+  const defaultEvents = useMemo(() => [
     {
       title: "Hackathon 2026",
       description: "Build amazing projects",
@@ -111,7 +111,7 @@ export default function LandingPage({ onRegister, eventRefreshKey }) {
       coordinator: "Dharmatej",
       inspector: "Prof. Ramesh, Sports Authority"
     }
-  ];
+  ], []);
 
   useEffect(() => {
     const loadEvents = async () => {
