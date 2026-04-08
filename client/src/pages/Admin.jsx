@@ -241,6 +241,7 @@ export default function Admin({ onEventCreated }) {
   };
 
   const blockedUsers = users.filter((user) => user.blocked);
+  const totalRegistrations = registrations.length;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-950 via-purple-950 to-black p-6 text-white">
@@ -260,6 +261,21 @@ export default function Admin({ onEventCreated }) {
           >
             🔄 Refresh Now
           </button>
+        </div>
+      </div>
+
+      <div className="mb-6 grid gap-4 sm:grid-cols-3">
+        <div className="bg-white/10 border border-white/10 rounded-3xl p-5">
+          <p className="text-sm text-gray-400">Total Registered</p>
+          <p className="text-4xl font-bold text-purple-300 mt-2">{totalRegistrations}</p>
+        </div>
+        <div className="bg-white/10 border border-white/10 rounded-3xl p-5">
+          <p className="text-sm text-gray-400">Total Events</p>
+          <p className="text-4xl font-bold text-purple-300 mt-2">{events.length}</p>
+        </div>
+        <div className="bg-white/10 border border-white/10 rounded-3xl p-5">
+          <p className="text-sm text-gray-400">Total Users</p>
+          <p className="text-4xl font-bold text-purple-300 mt-2">{users.length}</p>
         </div>
       </div>
 
