@@ -14,6 +14,8 @@ export default function Admin({ onEventCreated }) {
   const [events, setEvents] = useState([]);
   const [users, setUsers] = useState([]);
   const [registrations, setRegistrations] = useState([]);
+  const [lastRefresh, setLastRefresh] = useState(new Date());
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   const [showUsers, setShowUsers] = useState(false);
   const [showBlocked, setShowBlocked] = useState(false);
@@ -37,6 +39,7 @@ export default function Admin({ onEventCreated }) {
 
   const loadData = async () => {
     try {
+      setIsRefreshing(true);
       const [eventsRes, usersRes, registrationsRes] = await Promise.all([
         fetchEvents(),
         fetchUsers(),
@@ -59,14 +62,23 @@ export default function Admin({ onEventCreated }) {
       setEvents(eventsData);
       setUsers(usersData);
       setRegistrations(registrationsData);
+      setLastRefresh(new Date());
     } catch (error) {
       console.error(error);
+    } finally {
+      setIsRefreshing(false);
     }
   };
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     loadData();
+    
+    // Set up auto-refresh every 2 seconds
+    const interval = setInterval(() => {
+      loadData();
+    }, 2000);
+
+    return () => clearInterval(interval);
   }, []);
 
   const handleImage = (e) => {
@@ -232,7 +244,24 @@ export default function Admin({ onEventCreated }) {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-950 via-purple-950 to-black p-6 text-white">
-      <h1 className="text-3xl mb-6 font-bold">Admin Panel 🛠️</h1>
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-3xl font-bold">Admin Panel 🛠️</h1>
+        <div className="flex items-center gap-3">
+          <div className="text-sm text-gray-400">
+            <p>Last refresh: {lastRefresh.toLocaleTimeString()}</p>
+            <p className="flex items-center gap-1">
+              <span className={`inline-block w-2 h-2 rounded-full ${isRefreshing ? 'bg-yellow-400 animate-pulse' : 'bg-green-400'}`}></span>
+              {isRefreshing ? 'Refreshing...' : '✓ Live data'}
+            </p>
+          </div>
+          <button
+            onClick={() => loadData()}
+            className="bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded-lg text-sm font-medium transition"
+          >
+            🔄 Refresh Now
+          </button>
+        </div>
+      </div>
 
       <button
         onClick={() => setShowUsers(!showUsers)}
@@ -551,9 +580,7 @@ export default function Admin({ onEventCreated }) {
                       ) : (
                         <span className="text-blue-400">🆓 Free</span>
                       )}
-                      {event.capacity && (
-                        <span className="text-purple-400">👥 {event.currentRegistrations || 0}/{event.capacity}</span>
-                      )}
+                      <span className="text-cyan-400">👥 Registrations: {event.currentRegistrations || 0}{event.capacity ? `/${event.capacity}` : ""}</span>
                     </div>
                   </div>
                   <div className="flex gap-2 ml-4">
