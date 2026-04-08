@@ -31,7 +31,7 @@ const copyEventLink = async () => {
   }
 };
 
-export default function EventCard({ event, onRegister }) {
+export default function EventCard({ event, onRegister, onCheckout }) {
   const [liked, setLiked] = useState(false);
   const [showTicket, setShowTicket] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
@@ -101,9 +101,11 @@ export default function EventCard({ event, onRegister }) {
       return;
     }
 
-    // If paid event, redirect to checkout
+    // If paid event, open checkout
     if (event.isPaid) {
-      window.location.href = `/checkout?eventId=${event.id}`;
+      if (onCheckout) {
+        onCheckout(event);
+      }
       return;
     }
 

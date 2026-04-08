@@ -1,10 +1,26 @@
-﻿import { useState } from "react";
+﻿import { useState, useEffect } from "react";
 import EventRating from "../components/EventRating";
-import { rateEvent } from "../api";
+import { rateEvent, getUserPayments } from "../api";
 
-export default function Dashboard({ registered }) {
+export default function Dashboard({ registered, user }) {
   const [activeTab, setActiveTab] = useState("events");
+  const [payments, setPayments] = useState([]);
   const today = new Date();
+
+  useEffect(() => {
+    if (user && user.id) {
+      const fetchPayments = async () => {
+        try {
+          const response = await getUserPayments(user.id);
+          setPayments(response.data || []);
+        } catch (error) {
+          console.error("Failed to fetch payments:", error);
+          setPayments([]);
+        }
+      };
+      fetchPayments();
+    }
+  }, [user]);
 
   const handleRateEvent = async (registrationId, rating, review) => {
     await rateEvent(registrationId, rating, review);
@@ -142,8 +158,53 @@ export default function Dashboard({ registered }) {
 
       {/* Payments Tab */}
       {activeTab === "payments" && (
-        <div className="bg-white/5 border border-white/10 rounded-xl p-6">
-          <p className="text-gray-400">Payment history is not available in local mode.</p>
+        <div>
+          {payments.length === 0 ? (
+            <div className="bg-white/5 border border-white/10 rounded-xl p-6 text-gray-400 text-center">
+              No payments yet. Purchase a ticket for a paid event to see payment history.
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <div className="grid gap-4 sm:grid-cols-2 mb-6">
+                <div className="bg-white/10 border border-white/10 rounded-lg p-4">
+                  <p className="text-sm text-gray-400">Total Paid</p>
+                  <p className="text-2xl font-bold">₹{payments.reduce((sum, p) => sum + (p.amount || 0), 0)}</p>
+                </div>
+                <div className="bg-white/10 border border-white/10 rounded-lg p-4">
+                  <p className="text-sm text-gray-400">Transactions</p>
+                  <p className="text-2xl font-bold">{payments.length}</p>
+                </div>
+              </div>
+
+              {payments.map((payment, index) => (
+                <div key={index} className="bg-white/10 border border-white/10 rounded-lg p-4">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <p className="font-semibold text-white">Transaction ID: {payment.transactionId}</p>
+                      <p className="text-sm text-gray-400 mt-1">
+                        {new Date(payment.createdAt).toLocaleDateString()} {new Date(payment.createdAt).toLocaleTimeString()}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <p className="font-semibold text-white">₹{payment.amount}</p>
+                      <span className={`text-sm px-3 py-1 rounded-full inline-block mt-2 ${
+                        payment.status === "completed" ? "bg-green-500/20 text-green-400" :
+                        payment.status === "refunded" ? "bg-orange-500/20 text-orange-400" :
+                        "bg-yellow-500/20 text-yellow-400"
+                      }`}>
+                        {payment.status.charAt(0).toUpperCase() + payment.status.slice(1)}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="mt-3 pt-3 border-t border-white/5 flex justify-between text-sm">
+                    <span className="text-gray-400">
+                      Payment Method: <span className="text-white capitalize">{payment.paymentMethod === "upi" ? "UPI" : payment.paymentMethod}</span>
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
     </div>

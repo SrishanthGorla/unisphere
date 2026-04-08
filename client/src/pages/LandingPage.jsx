@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from "react";
 import EventCard from "../components/EventCard";
 import { fetchEvents } from "../api";
 
-export default function LandingPage({ onRegister, eventRefreshKey }) {
+export default function LandingPage({ onRegister, onCheckout, eventRefreshKey }) {
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("All");
   const [sort, setSort] = useState("default");
@@ -363,6 +363,7 @@ export default function LandingPage({ onRegister, eventRefreshKey }) {
             key={event.id}
             event={event}
             onRegister={onRegister}
+            onCheckout={onCheckout}
           />
         ))}
       </div>

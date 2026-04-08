@@ -5,6 +5,7 @@ import Auth from "./pages/Auth";
 import Profile from "./pages/Profile";
 import Contact from "./pages/Contact";
 import Admin from "./pages/Admin";
+import Checkout from "./pages/Checkout";
 import { fetchRegistrations, registerEvent } from "./api";
 
 function App() {
@@ -14,6 +15,7 @@ function App() {
   const [dark, setDark] = useState(true);
   const [menuOpen, setMenuOpen] = useState(false);
   const [eventRefreshKey, setEventRefreshKey] = useState(0);
+  const [checkoutEvent, setCheckoutEvent] = useState(null);
 
   const loadRegistrations = async (userId) => {
     try {
@@ -297,11 +299,22 @@ function App() {
       </header>
 
       <div>
-        {page === "home" && <LandingPage onRegister={handleRegisterEvent} eventRefreshKey={eventRefreshKey} />}
-        {page === "dashboard" && <Dashboard registered={registered} user={user} />}
-        {page === "profile" && <Profile user={user} setUser={setUser} registered={registered} />}
-        {page === "contact" && <Contact />}
-        {page === "admin" && user.role === "admin" && <Admin onEventCreated={handleEventCreated} />}
+        {checkoutEvent && (
+          <Checkout
+            eventId={checkoutEvent.id}
+            userId={user.id}
+            onPaymentComplete={() => {
+              setCheckoutEvent(null);
+              window.location.reload();
+            }}
+            onCancel={() => setCheckoutEvent(null)}
+          />
+        )}
+        {!checkoutEvent && page === "home" && <LandingPage onRegister={handleRegisterEvent} onCheckout={setCheckoutEvent} eventRefreshKey={eventRefreshKey} />}
+        {!checkoutEvent && page === "dashboard" && <Dashboard registered={registered} user={user} />}
+        {!checkoutEvent && page === "profile" && <Profile user={user} setUser={setUser} registered={registered} />}
+        {!checkoutEvent && page === "contact" && <Contact />}
+        {!checkoutEvent && page === "admin" && user.role === "admin" && <Admin onEventCreated={handleEventCreated} />}
       </div>
 
       {/* Enhanced Footer */}

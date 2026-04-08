@@ -1,6 +1,7 @@
 const USERS_KEY = "unisphere_users";
 const EVENTS_KEY = "unisphere_events";
 const REGISTRATIONS_KEY = "unisphere_registrations";
+const PAYMENTS_KEY = "unisphere_payments";
 
 const defaultEvents = [
   {
@@ -580,26 +581,121 @@ export const rateEvent = async (registrationId, rating, review) => {
   return createResponse(registrations[registrationIndex]);
 };
 
-export const createPaymentSession = async () => {
-  throw new Error("Payments are not supported in local mode.");
+export const createPaymentSession = async (payload) => {
+  initStorage();
+  const transactionId = `TXN${Date.now()}${Math.random().toString(36).slice(2, 6).toUpperCase()}`;
+  const session = {
+    transactionId,
+    userId: payload.userId,
+    eventId: payload.eventId,
+    amount: payload.amount,
+    paymentMethod: payload.paymentMethod || "stripe",
+    status: "pending",
+    createdAt: new Date().toISOString()
+  };
+  return createResponse(session);
 };
 
-export const processPayment = async () => {
-  throw new Error("Payments are not supported in local mode.");
+export const processPayment = async (payload) => {
+  initStorage();
+  const payments = getData(PAYMENTS_KEY, []);
+  const events = getData(EVENTS_KEY, []);
+  const registrations = getData(REGISTRATIONS_KEY, []);
+
+  const transactionId = payload.transactionId || `TXN${Date.now()}${Math.random().toString(36).slice(2, 6).toUpperCase()}`;
+  
+  const payment = {
+    id: transactionId,
+    transactionId,
+    userId: payload.userId,
+    eventId: payload.eventId,
+    amount: payload.amount,
+    paymentMethod: payload.paymentMethod || "stripe",
+    status: "completed",
+    createdAt: new Date().toISOString(),
+    completedAt: new Date().toISOString()
+  };
+
+  payments.push(payment);
+  setData(PAYMENTS_KEY, payments);
+
+  // Register user for the event after payment
+  const event = events.find((e) => e.id === payload.eventId);
+  if (event && !registrations.find((r) => r.userId === payload.userId && r.eventId === payload.eventId)) {
+    const newRegistration = {
+      id: getNextId("registration"),
+      userId: payload.userId,
+      eventId: payload.eventId,
+      eventTitle: event.title,
+      status: "confirmed",
+      waitlistPosition: null,
+      registeredAt: new Date().toISOString(),
+      isPaid: true,
+      paymentAmount: payload.amount,
+      paymentStatus: "completed",
+      transactionId,
+      paymentMethod: payload.paymentMethod,
+      paidAt: new Date().toISOString(),
+      rating: null,
+      review: "",
+      reviewedAt: null
+    };
+    registrations.push(newRegistration);
+    event.currentRegistrations = (event.currentRegistrations || 0) + 1;
+    setData(REGISTRATIONS_KEY, registrations);
+    setData(EVENTS_KEY, events);
+  }
+
+  return createResponse(payment);
 };
 
-export const getPaymentDetails = async () => {
-  throw new Error("Payments are not supported in local mode.");
+export const getPaymentDetails = async (transactionId) => {
+  initStorage();
+  const payments = getData(PAYMENTS_KEY, []);
+  const payment = payments.find((p) => p.transactionId === transactionId);
+  if (!payment) {
+    throw new Error("Payment not found");
+  }
+  return createResponse(payment);
 };
 
-export const getUserPayments = async () => {
-  throw new Error("Payments are not supported in local mode.");
+export const getUserPayments = async (userId) => {
+  initStorage();
+  const payments = getData(PAYMENTS_KEY, []);
+  const userPayments = payments.filter((p) => p.userId === userId);
+  return createResponse(userPayments);
 };
 
-export const refundPayment = async () => {
-  throw new Error("Payments are not supported in local mode.");
+export const refundPayment = async (transactionId, reason) => {
+  initStorage();
+  const payments = getData(PAYMENTS_KEY, []);
+  const paymentIndex = payments.findIndex((p) => p.transactionId === transactionId);
+  if (paymentIndex === -1) {
+    throw new Error("Payment not found");
+  }
+
+  payments[paymentIndex].status = "refunded";
+  payments[paymentIndex].refundedAt = new Date().toISOString();
+  payments[paymentIndex].refundReason = reason;
+
+  setData(PAYMENTS_KEY, payments);
+  return createResponse(payments[paymentIndex]);
 };
 
 export const getPaymentStats = async () => {
-  throw new Error("Payments are not supported in local mode.");
+  initStorage();
+  const payments = getData(PAYMENTS_KEY, []);
+  
+  const totalPayments = payments.length;
+  const totalAmount = payments.reduce((sum, p) => sum + (p.amount || 0), 0);
+  const completedPayments = payments.filter((p) => p.status === "completed").length;
+  const refundedPayments = payments.filter((p) => p.status === "refunded").length;
+
+  return createResponse({
+    totalPayments,
+    totalAmount,
+    completedPayments,
+    refundedPayments,
+    payments
+  });
 };
