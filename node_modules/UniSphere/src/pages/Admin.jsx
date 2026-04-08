@@ -43,16 +43,22 @@ export default function Admin({ onEventCreated }) {
         fetchAllRegistrations()
       ]);
 
-      setEvents(eventsRes.data.map((event) => ({ ...event, id: event.id })));
-      setUsers(usersRes.data.map((user) => ({ ...user, id: user.id })));
-      setRegistrations(
-        registrationsRes.data.map((registration) => ({
+      const eventsData = eventsRes.data.map((event) => ({ ...event, id: event.id }));
+      const usersData = usersRes.data.map((user) => ({ ...user, id: user.id }));
+      
+      const registrationsData = registrationsRes.data.map((registration) => {
+        const user = usersData.find((u) => u.id === registration.userId);
+        return {
           ...registration,
           id: registration.id,
-          user: registration.user,
+          user: user,
           event: registration.eventId
-        }))
-      );
+        };
+      });
+
+      setEvents(eventsData);
+      setUsers(usersData);
+      setRegistrations(registrationsData);
     } catch (error) {
       console.error(error);
     }
@@ -207,7 +213,7 @@ export default function Admin({ onEventCreated }) {
     try {
       await blockUser(userId);
       await loadData();
-    } catch (error) {
+    } catch {
       alert("Unable to block user.");
     }
   };
@@ -216,7 +222,7 @@ export default function Admin({ onEventCreated }) {
     try {
       await unblockUser(userId);
       await loadData();
-    } catch (error) {
+    } catch {
       alert("Unable to unblock user.");
     }
   };

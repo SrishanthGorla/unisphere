@@ -36,6 +36,7 @@ export default function EventCard({ event, onRegister }) {
   const [showTicket, setShowTicket] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
   const [showShareOptions, setShowShareOptions] = useState(false);
+  const [countdown, setCountdown] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
   const ticketId = useMemo(() => event.id ? event.id.slice(-5).toUpperCase() : 'DEMO', [event.id]);
 
   // 🧠 SAFE DATE PARSE

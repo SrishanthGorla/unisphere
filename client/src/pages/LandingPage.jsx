@@ -127,13 +127,13 @@ export default function LandingPage({ onRegister, eventRefreshKey }) {
         } else {
           setEvents(defaultEvents);
         }
-      } catch (error) {
+      } catch {
         setEvents(defaultEvents);
       }
     };
 
     loadEvents();
-  }, [eventRefreshKey]);
+  }, [eventRefreshKey, defaultEvents]);
 
   // Find next upcoming event for hero section
   const getNextEvent = () => {

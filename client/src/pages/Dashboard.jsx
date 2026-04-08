@@ -2,7 +2,7 @@
 import EventRating from "../components/EventRating";
 import { rateEvent } from "../api";
 
-export default function Dashboard({ registered, user }) {
+export default function Dashboard({ registered }) {
   const [activeTab, setActiveTab] = useState("events");
   const today = new Date();
 
