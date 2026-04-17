@@ -347,11 +347,16 @@ export default function Admin({ onEventCreated }) {
                 {usersForEvent.length === 0 ? (
                   <p className="text-gray-400">No registrations</p>
                 ) : (
-                  usersForEvent.map((registration) => (
-                    <div key={registration.id} className="bg-gray-800 p-2 mt-2 rounded">
-                      {registration.user?.email}
-                    </div>
-                  ))
+                  <div className="mt-3 rounded-2xl bg-gray-800 p-4">
+                    <p className="text-lg font-semibold text-white">
+                      {usersForEvent.length} registration{usersForEvent.length === 1 ? "" : "s"}
+                    </p>
+                    {event.capacity ? (
+                      <p className="text-sm text-gray-400 mt-1">
+                        {usersForEvent.length}/{event.capacity} seats filled
+                      </p>
+                    ) : null}
+                  </div>
                 )}
               </div>
             );
